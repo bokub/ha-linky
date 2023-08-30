@@ -1,0 +1,31 @@
+{
+  "name": "ha-linky",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Home Assistant add-on for Linky smart meters",
+  "author": "First Last <first.last@example.com>",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "prepare": "husky install"
+  },
+  "prettier": "@bokub/prettier-config",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "dayjs": "^1.11.9",
+    "linky": "^2.0.2",
+    "node-cron": "^3.0.2",
+    "websocket": "^1.0.34"
+  },
+  "devDependencies": {
+    "@bokub/prettier-config": "^2.1.0",
+    "@types/node": "^20.4.5",
+    "@types/node-cron": "^3.0.8",
+    "@types/websocket": "^1.0.5",
+    "home-assistant-js-websocket": "^8.2.0",
+    "husky": "^8.0.0",
+    "prettier": "^2.8.8",
+    "pretty-quick": "^3.1.3",
+    "typescript": "^5.1.6"
+  }
+}

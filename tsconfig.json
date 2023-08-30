@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist",
+    "allowJs": true,
+    "module": "NodeNext",
+    "resolveJsonModule": true
+  },
+  "include": ["./src/**/*"]
+}
