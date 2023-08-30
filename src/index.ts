@@ -32,8 +32,8 @@ async function main() {
 
   async function init() {
     info(`New PRM detected, importing as much historical data as possible`);
-    const historicalData = await consumptionClient.getEnergyData(null);
-    await haClient.saveStatistics(userConfig.consumption.prm, historicalData);
+    const energyData = await consumptionClient.getEnergyData(null);
+    await haClient.saveStatistics(userConfig.consumption.prm, energyData);
   }
   async function sync() {
     debug('Data synchronization started');
@@ -50,9 +50,9 @@ async function main() {
       return;
     }
     const firstDay = dayjs(lastStatistic.start).add(1, 'day');
-    const historicalData = await consumptionClient.getEnergyData(firstDay);
-    incrementSums(historicalData, lastStatistic.sum);
-    await haClient.saveStatistics(userConfig.consumption.prm, historicalData);
+    const energyData = await consumptionClient.getEnergyData(firstDay);
+    incrementSums(energyData, lastStatistic.sum);
+    await haClient.saveStatistics(userConfig.consumption.prm, energyData);
   }
 
   const isNew = await haClient.isNewPRM(userConfig.consumption.prm);
@@ -73,7 +73,9 @@ async function main() {
   );
 
   cron.schedule(`${randomSecond} ${randomMinute} 6,9 * * *`, async () => {
+    await haClient.connect();
     await sync();
+    haClient.disconnect();
   });
 }
 

@@ -95,7 +95,7 @@ export class HomeAssistantClient {
       metadata: {
         has_mean: false,
         has_sum: true,
-        name: 'Consommation Linky ' + prm,
+        name: `Linky ${prm}`, // TODO make it configurable
         source: SOURCE,
         statistic_id: statisticId,
         unit_of_measurement: 'Wh',
@@ -122,7 +122,7 @@ export class HomeAssistantClient {
   }> {
     const isNew = await this.isNewPRM(prm);
     if (isNew) {
-      debug(`No statistics found for PRM ${prm} in Home Assistant`);
+      warn(`PRM ${prm} not found in Home Assistant statistics`);
       return null;
     }
 

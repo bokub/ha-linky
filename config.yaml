@@ -1,6 +1,6 @@
 name: 'Linky'
-description: 'TODO'
-version: '1.0.0'
+description: 'Home Assistant add-on to sync Energy dashboards with Linky smart meters'
+version: '0.1.0'
 slug: 'linky'
 init: false
 url: 'https://github.com/bokub/ha-linky'
