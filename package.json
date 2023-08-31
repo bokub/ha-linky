@@ -2,8 +2,6 @@
   "name": "ha-linky",
   "private": true,
   "version": "0.1.0",
-  "description": "Home Assistant add-on to sync Energy dashboards with Linky smart meters",
-  "author": "First Last <first.last@example.com>",
   "type": "module",
   "scripts": {
     "build": "tsc",
