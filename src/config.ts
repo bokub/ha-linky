@@ -4,6 +4,7 @@ export type UserConfig = {
   consumption?: {
     prm: string;
     token: string;
+    name: string;
     action: 'sync' | 'reset';
   };
 };
@@ -13,6 +14,7 @@ export function getUserConfig(): UserConfig {
     const parsed: {
       'consumption PRM'?: string;
       'consumption token'?: string;
+      'consumption name'?: string;
       'consumption action'?: string;
     } = JSON.parse(readFileSync('/data/options.json', 'utf8'));
 
@@ -22,6 +24,7 @@ export function getUserConfig(): UserConfig {
           ? {
               prm: parsed['consumption PRM'],
               token: parsed['consumption token'],
+              name: parsed['consumption name'] || 'Linky consumption',
               action: parsed['consumption action'] === 'reset' ? 'reset' : 'sync',
             }
           : undefined,

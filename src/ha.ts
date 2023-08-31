@@ -1,7 +1,7 @@
 import ws, { Message } from 'websocket';
 import { MSG_TYPE_AUTH_INVALID, MSG_TYPE_AUTH_OK, MSG_TYPE_AUTH_REQUIRED } from 'home-assistant-js-websocket';
 import { auth } from 'home-assistant-js-websocket/dist/messages.js';
-import { debug, info, warn } from './log.js';
+import { debug, warn } from './log.js';
 import dayjs from 'dayjs';
 
 const WS_URL = 'ws://supervisor/core/websocket';
@@ -88,14 +88,14 @@ export class HomeAssistantClient {
     });
   }
 
-  public async saveStatistics(prm: string, stats: { start: string; state: number; sum: number }[]) {
+  public async saveStatistics(prm: string, name: string, stats: { start: string; state: number; sum: number }[]) {
     const statisticId = `${SOURCE}:${prm}`;
     await this.sendMessage({
       type: 'recorder/import_statistics',
       metadata: {
         has_mean: false,
         has_sum: true,
-        name: `Linky ${prm}`, // TODO make it configurable
+        name,
         source: SOURCE,
         statistic_id: statisticId,
         unit_of_measurement: 'Wh',

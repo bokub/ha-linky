@@ -31,12 +31,12 @@ async function main() {
   }
 
   async function init() {
-    info(`New PRM detected, importing as much historical data as possible`);
+    info(`[${dayjs().format('DD/MM HH:mm')}] New PRM detected, importing as much historical data as possible`);
     const energyData = await consumptionClient.getEnergyData(null);
-    await haClient.saveStatistics(userConfig.consumption.prm, energyData);
+    await haClient.saveStatistics(userConfig.consumption.prm, userConfig.consumption.name, energyData);
   }
   async function sync() {
-    debug('Data synchronization started');
+    info(`[${dayjs().format('DD/MM HH:mm')}] Data synchronization started`);
 
     const lastStatistic = await haClient.findLastStatistic(userConfig.consumption.prm);
     if (!lastStatistic) {
@@ -52,7 +52,7 @@ async function main() {
     const firstDay = dayjs(lastStatistic.start).add(1, 'day');
     const energyData = await consumptionClient.getEnergyData(firstDay);
     incrementSums(energyData, lastStatistic.sum);
-    await haClient.saveStatistics(userConfig.consumption.prm, energyData);
+    await haClient.saveStatistics(userConfig.consumption.prm, userConfig.consumption.name, energyData);
   }
 
   const isNew = await haClient.isNewPRM(userConfig.consumption.prm);
@@ -69,7 +69,7 @@ async function main() {
   info(
     `Data synchronization planned every day at ` +
       `06:${randomMinute.toString().padStart(2, '0')}:${randomSecond.toString().padStart(2, '0')} and ` +
-      `09:${randomMinute.toString().padStart(2, '0')}:${randomSecond.toString().padStart(2, '0')}`
+      `09:${randomMinute.toString().padStart(2, '0')}:${randomSecond.toString().padStart(2, '0')}`,
   );
 
   cron.schedule(`${randomSecond} ${randomMinute} 6,9 * * *`, async () => {

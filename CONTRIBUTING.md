@@ -2,6 +2,7 @@
 
 ## Running locally
 
+- Comment the `image` line in `config.yaml` so the add-on can be rebuilt locally
 - Open in VSCode with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) installed
 - If not in a container already, click on "Reopen in container" when prompted
 - Click Terminal > Run Task > Start Home Assistant

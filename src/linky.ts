@@ -11,11 +11,11 @@ export class LinkyClient {
   constructor(token: string, prm: string) {
     this.prm = prm;
     this.session = new Session(token, prm);
-    this.session.userAgent = 'ha-linky/0.1.0';
+    this.session.userAgent = 'ha-linky/1.0.0';
   }
 
   public async getEnergyData(firstDay: null | Dayjs): Promise<EnergyDataPoint[]> {
-    let history: LinkyDataPoint[][] = [];
+    const history: LinkyDataPoint[][] = [];
     let offset = 0;
     let limitReached = false;
 
@@ -114,14 +114,17 @@ export class LinkyClient {
         .startOf('hour')
         .format('YYYY-MM-DDTHH:mm:ssZ'),
     }));
-    const grouped = formatted.reduce((acc, cur) => {
-      const date = cur.date;
-      if (!acc[date]) {
-        acc[date] = [];
-      }
-      acc[date].push(cur.value);
-      return acc;
-    }, {} as { [date: string]: number[] });
+    const grouped = formatted.reduce(
+      (acc, cur) => {
+        const date = cur.date;
+        if (!acc[date]) {
+          acc[date] = [];
+        }
+        acc[date].push(cur.value);
+        return acc;
+      },
+      {} as { [date: string]: number[] },
+    );
     return Object.entries(grouped).map(([date, values]) => ({
       date,
       value: values.reduce((acc, cur) => acc + cur, 0) / values.length,
