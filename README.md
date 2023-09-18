@@ -6,7 +6,7 @@
 
 > A **Home Assistant** add-on to sync Energy dashboards with your **Linky** smart meter
 
-**N.B**: Because this tool is targeted for French people, the documentation is...in French!
+**N.B**: Because this tool is targeted for French users, the documentation is...in French!
 
 ---
 
@@ -15,7 +15,7 @@
 Il utilise le module [@bokub/linky](https://github.com/bokub/linky) et le service [Conso API](https://conso.boris.sh/) pour communiquer avec Enedis et récupérer votre consommation.
 
 <p align="center">
-  <img height="452" src="https://github.com/bokub/ha-linky/assets/17952318/ed53a1d5-e0c6-4c50-88ac-576f6542e63b">
+  <img src="https://github.com/bokub/ha-linky/assets/17952318/ed53a1d5-e0c6-4c50-88ac-576f6542e63b">
 </p>
 
 ## Prérequis
