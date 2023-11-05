@@ -28,7 +28,7 @@ async function main() {
 
   if (userConfig.consumption.action === 'reset') {
     await haClient.purge(userConfig.consumption.prm);
-    await haClient.purge(userConfig.production.prm);
+    await haClient.purge(userConfig.production.prm + 'p');
     info('Statistics removed successfully!');
     haClient.disconnect();
     debug('HA Linky stopped');
@@ -38,10 +38,10 @@ async function main() {
   async function init() {
     info(`[${dayjs().format('DD/MM HH:mm')}] New PRM detected, importing as much historical data as possible`);
     const energyData = await consumptionClient.getEnergyData(null, false);
-    await haClient.saveStatistics(userConfig.consumption.prm, userConfig.consumption.name, energyData);
+    await haClient.saveStatistics(userConfig.consumption.prm, userConfig.consumption.name, false, energyData);
     if (userConfig.production.action === 'yes') {
       const energyData = await productionClient.getEnergyData(null, true);
-      await haClient.saveStatistics(userConfig.production.prm, userConfig.production.name, energyData);
+      await haClient.saveStatistics(userConfig.production.prm, userConfig.production.name, true, energyData);
     }
   }
   async function sync() {
@@ -75,13 +75,13 @@ async function main() {
       const firstDay = dayjs(lastStatistic.start).add(1, 'day');
       const energyData = await consumptionClient.getEnergyData(firstDay, false);
       incrementSums(energyData, lastStatistic.sum);
-      await haClient.saveStatistics(userConfig.consumption.prm, userConfig.consumption.name, energyData);
+      await haClient.saveStatistics(userConfig.consumption.prm, userConfig.consumption.name, false, energyData);
     }
     if (isSyncingNeeded1) {
       const firstDay = dayjs(lastStatistic1.start).add(1, 'day');
       const energyData = await productionClient.getEnergyData(firstDay, true);
       incrementSums(energyData, lastStatistic1.sum);
-      await haClient.saveStatistics(userConfig.production.prm, userConfig.production.name, energyData);
+      await haClient.saveStatistics(userConfig.production.prm, userConfig.production.name, true, energyData);
     }
   }
 
