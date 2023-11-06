@@ -33,7 +33,7 @@ export class LinkyClient {
       from = firstDay.format('YYYY-MM-DD');
       limitReached = true;
     }
-
+ 
     let to = dayjs().subtract(offset, 'days').format('YYYY-MM-DD');
 
     if (prod) {

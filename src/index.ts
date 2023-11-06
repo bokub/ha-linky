@@ -54,7 +54,7 @@ async function main() {
     }
     let lastStatistic1;
     if (userConfig.production.action === 'yes') {
-      lastStatistic1 = await haClient.findLastStatistic(userConfig.production.prm);
+      lastStatistic1 = await haClient.findLastStatistic(userConfig.production.prm+'p');
       if (!lastStatistic1) {
         warn('Data synchronization failed, no previous statistic found in Home Assistant');
         return;
