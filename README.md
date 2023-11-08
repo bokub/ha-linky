@@ -41,12 +41,14 @@ Pour utiliser cet add-on, il vous faut :
 
 Une fois l'add-on installé, rendez-vous dans l'onglet _Configuration_ et remplissez les champs vides :
 
-- `consumption PRM` : Votre numéro de PRM (14 chiffres).
+- `PRM` : Votre numéro de PRM (14 chiffres).
   - Si vous ne le connaissez pas, entrez votre token sur [la page exemples](https://conso.boris.sh/exemples) de Conso API et le PRM s'affichera dans le champ _PRM_
   - Vous pouvez également le trouver sur votre compteur en appuyant sur la touche **+** jusqu’à lire la valeur du _numéro de PRM_.
-- `consumption token` : Votre token **Conso API**
+- `token` : Votre token **Conso API**
 - `consumption name` : Choisissez le nom qui sera affiché dans les tableaux de bord d'énergie. Vous pourrez le changer plus tard si vous le souhaitez.
+- `production name` : Choisissez le nom qui sera affiché dans les tableaux de bord d'énergie partie production. Vous pourrez le changer plus tard si vous le souhaitez.
 - `consumption action` : Laissez la valeur par défaut: `sync`
+- `sync production` : active la partie production de votre linky
 
 Appliquez les modifications et démarrez / redémarrez l'add-on si ce n'est pas déjà fait
 
