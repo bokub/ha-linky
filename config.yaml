@@ -1,6 +1,6 @@
 name: Linky
 description: Sync Energy dashboards with your Linky smart meter
-version: 1.2.2
+version: 1.2.6
 slug: linky
 init: false
 url: https://github.com/bokub/ha-linky
@@ -13,17 +13,21 @@ arch:
   - i386
 homeassistant_api: true
 options:
-  PRM: ''
-  token: ''
-  consumption name: 'Linky consumption'
-  action: sync
-  sync production: non
-  production name: 'Linky production'
+  Consumption Sync: true
+  Consumption PRM: ''
+  Consumption Token: ''
+  Consumption Action: sync
+  Production Sync: false
+  Production PRM: ''
+  Production Token: ''
+  Production Action: sync
 
 schema:
-  PRM: str?
-  token: str?
-  consumption name: str
-  action: list(sync|reset)
-  sync production: list(yes|non)
-  production name: str
+  Consumption Sync: bool?
+  Consumption PRM: str?
+  Consumption Token: str?
+  Consumption Action: list(sync|reset)
+  Production Sync: bool?
+  Production PRM: str?
+  Production Token: str?
+  Production Action: list(sync|reset)
