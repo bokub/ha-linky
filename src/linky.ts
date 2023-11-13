@@ -85,7 +85,7 @@ export class LinkyClient {
           debug(`Successfully retrieved daily prod data from ${from} to ${to}`);
           offset += interval;
         } catch (e) {
-          debug(`Cannot fetch daily prod data from ${from} to ${to}, here is the error:`);
+          debug(`Cannot fetch daily production data from ${from} to ${to}, here is the error:`);
           warn(e);
           break;
         }
