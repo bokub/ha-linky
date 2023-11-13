@@ -2,14 +2,12 @@ import { readFileSync } from 'fs';
 
 export type UserConfig = {
   consumption?: {
-    sync: boolean;
     prm: string;
     token: string;
     name: string;
     action: 'sync' | 'reset';
   };
   production?: {
-    sync: boolean;
     prm: string;
     token: string;
     name: string;
@@ -20,35 +18,33 @@ export type UserConfig = {
 export function getUserConfig(): UserConfig {
   try {
     const parsed: {
-      'Consumption Sync'?: boolean;
-      'Consumption PRM'?: string;
-      'Consumption Token'?: string;
-      'Consumption Action'?: string;
-      'Production Sync'?: boolean;
-      'Production PRM'?: string;
-      'Production Token'?: string;
-      'Production Action'?: string;
+      'consumption name'?: string;
+      'consumption PRM'?: string;
+      'consumption token'?: string;
+      'consumption action'?: string;
+      'production name'?: string;
+      'production PRM'?: string;
+      'production token'?: string;
+      'production action'?: string;
     } = JSON.parse(readFileSync('/data/options.json', 'utf8'));
 
     return {
       consumption:
-        parsed['Consumption PRM'] && parsed['Consumption Token']
+        parsed['consumption PRM'] && parsed['consumption token']
           ? {
-              sync: parsed['Consumption Sync'],
-              prm: parsed['Consumption PRM'],
-              token: parsed['Consumption Token'],
-              name: parsed['Consumption Name'] || 'Linky consumption',
-              action: parsed['consumption_action'] === 'reset' ? 'reset' : 'sync',
+              prm: parsed['consumption PRM'],
+              token: parsed['consumption token'],
+              name: parsed['consumption name'] || 'Linky consumption',
+              action: parsed['consumption action'] === 'reset' ? 'reset' : 'sync',
             }
           : undefined,
       production:
-        parsed['Production PRM'] && parsed['Production Token']
+        parsed['production PRM'] && parsed['production token']
           ? {
-              sync: parsed['Production Sync'],
-              prm: parsed['Production PRM'],
-              token: parsed['Production Token'],
-              name: parsed['Production Name'] || 'Linky consumption',
-              action: parsed['Production Action'] === 'reset' ? 'reset' : 'sync',
+              prm: parsed['production PRM'],
+              token: parsed['production token'],
+              name: parsed['production name'] || 'Linky consumption',
+              action: parsed['production action'] === 'reset' ? 'reset' : 'sync',
             }
           : undefined,
     };

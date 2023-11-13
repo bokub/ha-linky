@@ -10,58 +10,57 @@ async function main() {
 
   const userConfig = getUserConfig();
 
-  if (!userConfig.consumption && userConfig.consumption.sync) {
+  if (!userConfig.consumption) {
     warn('Add-on consumption is not configured properly');
-    debug('HA Linky stopped');
-    return;
   }
-  if (!userConfig.production && userConfig.production.sync) {
+  if (!userConfig.production) {
     warn('Add-on production is not configured properly');
-    debug('HA Linky stopped');
-    return;
   }
   let consumptionClient;
   let productionClient;
 
-  if (userConfig.consumption.sync) {
-    info('consumption PRM ' + userConfig.consumption.prm + ' found in configuration');
-    consumptionClient = new LinkyClient(userConfig.consumption.token, userConfig.consumption.prm);
-  }
-  if (userConfig.production.sync) {
-    info('production PRM ' + userConfig.production.prm + ' found in configuration');
-    productionClient = new LinkyClient(userConfig.production.token, userConfig.production.prm);
-  }
   const haClient = new HomeAssistantClient();
   await haClient.connect();
 
-  if (userConfig.consumption.action === 'reset') {
-    await haClient.purge(userConfig.consumption.prm);
-    info('Statistics removed successfully for consumption!');
+  if (userConfig.consumption) {
+    info('consumption PRM ' + userConfig.consumption.prm + ' found in configuration');
+    consumptionClient = new LinkyClient(userConfig.consumption.token, userConfig.consumption.prm);
+
+    if (userConfig.consumption.action === 'reset') {
+      await haClient.purge(userConfig.consumption.prm);
+      info('Statistics removed successfully for consumption!');
+      haClient.disconnect();
+      debug('HA Linky stopped');
+      return;
+    }
   }
-  if (userConfig.production.action === 'reset') {
-    await haClient.purge(userConfig.production.prm + 'p');
-    info('Statistics removed successfully for production!');
-  }
-  if (userConfig.production.action === 'reset' || userConfig.consumption.action === 'reset') {
-    haClient.disconnect();
-    debug('HA Linky stopped');
-    return;
+  if (userConfig.production) {
+    info('production PRM ' + userConfig.production.prm + ' found in configuration');
+    productionClient = new LinkyClient(userConfig.production.token, userConfig.production.prm);
+
+    if (userConfig.production && userConfig.production.action === 'reset') {
+      await haClient.purge(userConfig.production.prm + 'p');
+      info('Statistics removed successfully for production!');
+      haClient.disconnect();
+      debug('HA Linky stopped');
+      return;
+    }
   }
 
   async function init() {
     info(`[${dayjs().format('DD/MM HH:mm')}] New PRM detected, importing as much historical data as possible`);
-    if (userConfig.consumption.sync) {
+    if (userConfig.consumption) {
       const energyData = await consumptionClient.getEnergyData(null, false);
       await haClient.saveStatistics(userConfig.consumption.prm, userConfig.consumption.name, energyData);
     }
-    if (userConfig.production.sync) {
+    if (userConfig.production) {
       const energyData = await productionClient.getEnergyData(null, true);
       await haClient.saveStatistics(userConfig.production.prm + 'p', userConfig.production.name, energyData);
     }
   }
   async function sync() {
     let lastStatisticC = null;
-    if (userConfig.consumption.sync) {
+    if (userConfig.consumption) {
       info(`[${dayjs().format('DD/MM HH:mm')}] Data synchronization started consumption`);
       lastStatisticC = await haClient.findLastStatistic(userConfig.consumption.prm);
       if (!lastStatisticC) {
@@ -70,7 +69,7 @@ async function main() {
       }
     }
     let lastStatisticP = null;
-    if (userConfig.production.sync) {
+    if (userConfig.production) {
       info(`[${dayjs().format('DD/MM HH:mm')}] Data synchronization started production`);
       lastStatisticP = await haClient.findLastStatistic(userConfig.production.prm + 'p');
       if (!lastStatisticP) {
@@ -80,15 +79,15 @@ async function main() {
     }
 
     let isSyncingNeededC = false;
-    if (userConfig.consumption.sync) {
+    if (userConfig.consumption) {
       isSyncingNeededC = dayjs(lastStatisticC.start).isBefore(dayjs().subtract(2, 'days')) && dayjs().hour() >= 6;
     }
     let isSyncingNeededP = false;
-    if (userConfig.production.sync) {
+    if (userConfig.production) {
       isSyncingNeededP = dayjs(lastStatisticP.start).isBefore(dayjs().subtract(2, 'days')) && dayjs().hour() >= 6;
     }
 
-    if (!isSyncingNeededC && !isSyncingNeededP && (userConfig.consumption.sync || userConfig.production.sync)) {
+    if (!isSyncingNeededC && !isSyncingNeededP && (userConfig.consumption || userConfig.production)) {
       debug('Everything is up to date, nothing to synchronize');
       return;
     }
@@ -108,10 +107,10 @@ async function main() {
 
   let isNewC = false;
   let isNewP = false;
-  if (userConfig.consumption.sync) {
+  if (userConfig.consumption) {
     isNewC = await haClient.isNewPRM(userConfig.consumption.prm);
   }
-  if (userConfig.production.sync) {
+  if (userConfig.production) {
     isNewP = await haClient.isNewPRM(userConfig.production.prm + 'p');
   }
   if (isNewP || isNewC) {
@@ -124,7 +123,7 @@ async function main() {
   const randomMinute = Math.floor(Math.random() * 59);
   const randomSecond = Math.floor(Math.random() * 59);
 
-  if (userConfig.consumption.sync || userConfig.production.sync) {
+  if (userConfig.consumption || userConfig.production) {
     info(
       `Data synchronization planned every day at ` +
         `06:${randomMinute.toString().padStart(2, '0')}:${randomSecond.toString().padStart(2, '0')} and ` +
