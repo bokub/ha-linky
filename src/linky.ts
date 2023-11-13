@@ -96,7 +96,7 @@ export class LinkyClient {
           debug(`Successfully retrieved daily consum data from ${from} to ${to}`);
           offset += interval;
         } catch (e) {
-          debug(`Cannot fetch daily data comsum from ${from} to ${to}, here is the error:`);
+          debug(`Cannot fetch daily consumption data from ${from} to ${to}, here is the error:`);
           warn(e);
           break;
         }
