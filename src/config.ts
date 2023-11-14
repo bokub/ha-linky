@@ -18,13 +18,13 @@ export type UserConfig = {
 export function getUserConfig(): UserConfig {
   try {
     const parsed: {
-      'consumption name'?: string;
       'consumption PRM'?: string;
       'consumption token'?: string;
+      'consumption name'?: string;
       'consumption action'?: string;
-      'production name'?: string;
       'production PRM'?: string;
       'production token'?: string;
+      'production name'?: string;
       'production action'?: string;
     } = JSON.parse(readFileSync('/data/options.json', 'utf8'));
 
