@@ -90,6 +90,7 @@ export class HomeAssistantClient {
 
   public async saveStatistics(prm: string, name: string, stats: { start: string; state: number; sum: number }[]) {
     const statisticId = `${SOURCE}:${prm}`;
+
     await this.sendMessage({
       type: 'recorder/import_statistics',
       metadata: {

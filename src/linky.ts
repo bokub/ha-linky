@@ -11,10 +11,10 @@ export class LinkyClient {
   constructor(token: string, prm: string) {
     this.prm = prm;
     this.session = new Session(token, prm);
-    this.session.userAgent = 'ha-linky/1.1.0';
+    this.session.userAgent = 'ha-linky/1.2.0';
   }
 
-  public async getEnergyData(firstDay: null | Dayjs): Promise<EnergyDataPoint[]> {
+  public async getEnergyData(firstDay: null | Dayjs, prod: boolean): Promise<EnergyDataPoint[]> {
     const history: LinkyDataPoint[][] = [];
     let offset = 0;
     let limitReached = false;
@@ -35,14 +35,27 @@ export class LinkyClient {
     }
 
     let to = dayjs().subtract(offset, 'days').format('YYYY-MM-DD');
-    try {
-      const loadCurve = await this.session.getLoadCurve(from, to);
-      history.unshift(LinkyClient.formatLoadCurve(loadCurve));
-      debug(`Successfully retrieved load curve from ${from} to ${to}`);
-      offset += interval;
-    } catch (e) {
-      debug(`Cannot fetch load curve from ${from} to ${to}, here is the error:`);
-      warn(e);
+
+    if (prod) {
+      try {
+        const loadCurve = await this.session.getProductionLoadCurve(from, to);
+        history.unshift(LinkyClient.formatLoadCurve(loadCurve));
+        debug(`Successfully retrieved load curve from ${from} to ${to}`);
+        offset += interval;
+      } catch (e) {
+        debug(`Cannot fetch load curve prod from ${from} to ${to}, here is the error:`);
+        warn(e);
+      }
+    } else {
+      try {
+        const loadCurve = await this.session.getLoadCurve(from, to);
+        history.unshift(LinkyClient.formatLoadCurve(loadCurve));
+        debug(`Successfully retrieved load curve from ${from} to ${to}`);
+        offset += interval;
+      } catch (e) {
+        debug(`Cannot fetch load curve consum from ${from} to ${to}, here is the error:`);
+        warn(e);
+      }
     }
 
     for (let loop = 0; loop < 10; loop++) {
@@ -65,15 +78,28 @@ export class LinkyClient {
         limitReached = true;
       }
 
-      try {
-        const dailyData = await this.session.getDailyConsumption(from, to);
-        history.unshift(LinkyClient.formatDailyData(dailyData));
-        debug(`Successfully retrieved daily data from ${from} to ${to}`);
-        offset += interval;
-      } catch (e) {
-        debug(`Cannot fetch daily data from ${from} to ${to}, here is the error:`);
-        warn(e);
-        break;
+      if (prod) {
+        try {
+          const dailyData = await this.session.getDailyProduction(from, to);
+          history.unshift(LinkyClient.formatDailyData(dailyData));
+          debug(`Successfully retrieved daily prod data from ${from} to ${to}`);
+          offset += interval;
+        } catch (e) {
+          debug(`Cannot fetch daily production data from ${from} to ${to}, here is the error:`);
+          warn(e);
+          break;
+        }
+      } else {
+        try {
+          const dailyData = await this.session.getDailyConsumption(from, to);
+          history.unshift(LinkyClient.formatDailyData(dailyData));
+          debug(`Successfully retrieved daily consum data from ${from} to ${to}`);
+          offset += interval;
+        } catch (e) {
+          debug(`Cannot fetch daily consumption data from ${from} to ${to}, here is the error:`);
+          warn(e);
+          break;
+        }
       }
     }
 
