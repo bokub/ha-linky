@@ -25,9 +25,9 @@ options:
 schema:
   consumption PRM: str?
   consumption token: str?
-  consumption name: str?
+  consumption name: str
   consumption action: list(sync|reset)
   production PRM: str?
   production token: str?
-  production name: str?
+  production name: str
   production action: list(sync|reset)
