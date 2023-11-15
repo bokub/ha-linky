@@ -41,12 +41,18 @@ Pour utiliser cet add-on, il vous faut :
 
 Une fois l'add-on installé, rendez-vous dans l'onglet _Configuration_ et remplissez les champs vides :
 
-- `consumption PRM` : Votre numéro de PRM (14 chiffres).
+- `consumption PRM` : Votre numéro de PRM (14 chiffres) pour la consommation.
   - Si vous ne le connaissez pas, entrez votre token sur [la page exemples](https://conso.boris.sh/exemples) de Conso API et le PRM s'affichera dans le champ _PRM_
   - Vous pouvez également le trouver sur votre compteur en appuyant sur la touche **+** jusqu’à lire la valeur du _numéro de PRM_.
 - `consumption token` : Votre token **Conso API**
 - `consumption name` : Choisissez le nom qui sera affiché dans les tableaux de bord d'énergie. Vous pourrez le changer plus tard si vous le souhaitez.
 - `consumption action` : Laissez la valeur par défaut: `sync`
+- `production PRM` : Votre numéro de PRM (14 chiffres) pour la production.
+  - Si vous ne le connaissez pas, entrez votre token sur [la page exemples](https://conso.boris.sh/exemples) de Conso API et le PRM s'affichera dans le champ _PRM_
+  - Vous pouvez également le trouver sur votre compteur en appuyant sur la touche **+** jusqu’à lire la valeur du _numéro de PRM_.
+- `production token` : Votre token **Conso API**
+- `production name` : Choisissez le nom qui sera affiché dans les tableaux de bord d'énergie. Vous pourrez le changer plus tard si vous le souhaitez.
+- `production action` : Laissez la valeur par défaut: `sync`
 
 Appliquez les modifications et démarrez / redémarrez l'add-on si ce n'est pas déjà fait
 
@@ -69,7 +75,7 @@ Pour visualiser les données de **HA Linky** dans vos tableaux de bord d'énergi
 
 - Cliquez [ici](https://my.home-assistant.io/redirect/config_energy/), ou ouvrez le menu _Paramètres_ / _Settings_, puis _Tableaux de bord_ / _Dashboards_, puis _Énergie_ / _Energy_
 - Dans la section _Réseau électrique_ / _Electricity grid_, cliquez sur _Ajouter une consommation_ / _Add consumption_
-- Choisissez la statistique correspondant au `consumption name` que vous avez choisi à l'étape de configuration
+- Choisissez la statistique correspondant au `consumption name` et/ou `production name` que vous avez choisi à l'étape de configuration
 - Cliquez sur _Enregistrer_ / _Save_
 
 ### Bon à savoir
@@ -82,8 +88,8 @@ Pour visualiser les données de **HA Linky** dans vos tableaux de bord d'énergi
 
 En cas de problème, il est toujours possible d'effacer toutes les données créées par **HA Linky**
 
-Revenez sur l'onglet _Configuration_ de l'add-on et changez la valeur de `consumption action` à `reset`, puis appliquez les modifications et redémarrez l'add-on.
+Revenez sur l'onglet _Configuration_ de l'add-on et changez la valeur de `production/consumption action` à `reset`, puis appliquez les modifications et redémarrez l'add-on.
 
 Ouvrez ensuite l'onglet _Journal_ / _Log_ pour vérifier que la remise à zéro s'est bien déroulée.
 
-Au prochain démarrage, si `consumption action` est repassé à `sync`, **HA Linky** réimportera à nouveau toutes vos données. Cette manipulation peut surcharger le serveur de **Conso API**, ne l'utilisez donc que si nécessaire pour ne pas risquer un ban !
+Au prochain démarrage, si `production/consumption action` est repassé à `sync`, **HA Linky** réimportera à nouveau toutes vos données. Cette manipulation peut surcharger le serveur de **Conso API**, ne l'utilisez donc que si nécessaire pour ne pas risquer un ban !
