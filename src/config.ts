@@ -1,18 +1,16 @@
 import { readFileSync } from 'fs';
 
+export type MeterConfig = {
+  prm: string;
+  token: string;
+  name: string;
+  action: 'sync' | 'reset';
+  isProduction: boolean;
+};
+
 export type UserConfig = {
-  consumption?: {
-    prm: string;
-    token: string;
-    name: string;
-    action: 'sync' | 'reset';
-  };
-  production?: {
-    prm: string;
-    token: string;
-    name: string;
-    action: 'sync' | 'reset';
-  };
+  consumption?: MeterConfig;
+  production?: MeterConfig;
 };
 
 export function getUserConfig(): UserConfig {
@@ -36,6 +34,7 @@ export function getUserConfig(): UserConfig {
               token: parsed['consumption token'],
               name: parsed['consumption name'] || 'Linky consumption',
               action: parsed['consumption action'] === 'reset' ? 'reset' : 'sync',
+              isProduction: false,
             }
           : undefined,
       production:
@@ -43,8 +42,9 @@ export function getUserConfig(): UserConfig {
           ? {
               prm: parsed['production PRM'],
               token: parsed['production token'],
-              name: parsed['production name'] || 'Linky consumption',
+              name: parsed['production name'] || 'Linky production',
               action: parsed['production action'] === 'reset' ? 'reset' : 'sync',
+              isProduction: true,
             }
           : undefined,
     };
