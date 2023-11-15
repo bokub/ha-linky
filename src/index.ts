@@ -1,6 +1,6 @@
 import { HomeAssistantClient } from './ha.js';
 import { LinkyClient } from './linky.js';
-import { getUserConfig } from './config.js';
+import { getUserConfig, MeterConfig } from './config.js';
 import { debug, error, info, warn } from './log.js';
 import cron from 'node-cron';
 import dayjs from 'dayjs';
@@ -10,132 +10,109 @@ async function main() {
 
   const userConfig = getUserConfig();
 
-  if (!userConfig.consumption) {
-    warn('Add-on consumption is not configured properly');
+  // Stop if configuration is empty
+  if (!userConfig.consumption && !userConfig.production) {
+    warn('Add-on is not configured properly');
+    debug('HA Linky stopped');
+    return;
   }
-  if (!userConfig.production) {
-    warn('Add-on production is not configured properly');
-  }
-  let consumptionClient;
-  let productionClient;
 
   const haClient = new HomeAssistantClient();
   await haClient.connect();
 
-  if (userConfig.consumption) {
-    info('consumption PRM ' + userConfig.consumption.prm + ' found in configuration');
-    consumptionClient = new LinkyClient(userConfig.consumption.token, userConfig.consumption.prm);
+  // Reset statistics if needed
+  if (userConfig.consumption?.action === 'reset') {
+    await haClient.purge(userConfig.consumption.prm, false);
+    info('Consumption statistics removed successfully!');
+  }
+  if (userConfig.production?.action === 'reset') {
+    await haClient.purge(userConfig.production.prm, true);
+    info('Production statistics removed successfully!');
+  }
 
-    if (userConfig.consumption.action === 'reset') {
-      await haClient.purge(userConfig.consumption.prm);
-      info('Statistics removed successfully for consumption!');
-      haClient.disconnect();
-      debug('HA Linky stopped');
+  // Stop if nothing else to do
+  if (userConfig.consumption?.action !== 'sync' && userConfig.production?.action !== 'sync') {
+    haClient.disconnect();
+    info('Nothing to sync');
+    debug('HA Linky stopped');
+    return;
+  }
+
+  async function init(config: MeterConfig) {
+    info(
+      `[${dayjs().format('DD/MM HH:mm')}] New PRM detected, importing as much historical ${
+        config.isProduction ? 'production' : 'consumption'
+      } data as possible`,
+    );
+
+    const client = new LinkyClient(config.token, config.prm, config.isProduction);
+    const energyData = await client.getEnergyData(null);
+    await haClient.saveStatistics(config.prm, config.name, config.isProduction, energyData);
+  }
+
+  async function sync(config: MeterConfig) {
+    info(
+      `[${dayjs().format('DD/MM HH:mm')}] Synchronization started for ${
+        config.isProduction ? 'production' : 'consumption'
+      } data`,
+    );
+
+    const lastStatistic = await haClient.findLastStatistic(config.prm, config.isProduction);
+    if (!lastStatistic) {
+      warn(`Data synchronization failed, no previous statistic found in Home Assistant`);
       return;
     }
-  }
-  if (userConfig.production) {
-    info('production PRM ' + userConfig.production.prm + ' found in configuration');
-    productionClient = new LinkyClient(userConfig.production.token, userConfig.production.prm);
 
-    if (userConfig.production && userConfig.production.action === 'reset') {
-      await haClient.purge(userConfig.production.prm + 'p');
-      info('Statistics removed successfully for production!');
-      haClient.disconnect();
-      debug('HA Linky stopped');
-      return;
-    }
-  }
-
-  async function init() {
-    info(`[${dayjs().format('DD/MM HH:mm')}] New PRM detected, importing as much historical data as possible`);
-    if (userConfig.consumption) {
-      const energyData = await consumptionClient.getEnergyData(null, false);
-      await haClient.saveStatistics(userConfig.consumption.prm, userConfig.consumption.name, energyData);
-    }
-    if (userConfig.production) {
-      const energyData = await productionClient.getEnergyData(null, true);
-      await haClient.saveStatistics(userConfig.production.prm + 'p', userConfig.production.name, energyData);
-    }
-  }
-  async function sync() {
-    let lastStatisticC = null;
-    if (userConfig.consumption) {
-      info(`[${dayjs().format('DD/MM HH:mm')}] Data synchronization started consumption`);
-      lastStatisticC = await haClient.findLastStatistic(userConfig.consumption.prm);
-      if (!lastStatisticC) {
-        warn('Data synchronization failed, no previous statistic found in Home Assistant for consumption');
-        return;
-      }
-    }
-    let lastStatisticP = null;
-    if (userConfig.production) {
-      info(`[${dayjs().format('DD/MM HH:mm')}] Data synchronization started production`);
-      lastStatisticP = await haClient.findLastStatistic(userConfig.production.prm + 'p');
-      if (!lastStatisticP) {
-        warn('Data synchronization failed, no previous statistic found in Home Assistant for production');
-        return;
-      }
-    }
-
-    let isSyncingNeededC = false;
-    if (userConfig.consumption) {
-      isSyncingNeededC = dayjs(lastStatisticC.start).isBefore(dayjs().subtract(2, 'days')) && dayjs().hour() >= 6;
-    }
-    let isSyncingNeededP = false;
-    if (userConfig.production) {
-      isSyncingNeededP = dayjs(lastStatisticP.start).isBefore(dayjs().subtract(2, 'days')) && dayjs().hour() >= 6;
-    }
-
-    if (!isSyncingNeededC && !isSyncingNeededP && (userConfig.consumption || userConfig.production)) {
+    const isSyncingNeeded = dayjs(lastStatistic.start).isBefore(dayjs().subtract(2, 'days')) && dayjs().hour() >= 6;
+    if (!isSyncingNeeded) {
       debug('Everything is up to date, nothing to synchronize');
       return;
     }
-    if (isSyncingNeededC) {
-      const firstDay = dayjs(lastStatisticC.start).add(1, 'day');
-      const energyData = await consumptionClient.getEnergyData(firstDay, false);
-      incrementSums(energyData, lastStatisticC.sum);
-      await haClient.saveStatistics(userConfig.consumption.prm, userConfig.consumption.name, energyData);
-    }
-    if (isSyncingNeededP) {
-      const firstDay = dayjs(lastStatisticP.start).add(1, 'day');
-      const energyData = await productionClient.getEnergyData(firstDay, true);
-      incrementSums(energyData, lastStatisticP.sum);
-      await haClient.saveStatistics(userConfig.production.prm + 'p', userConfig.production.name, energyData);
+    const client = new LinkyClient(config.token, config.prm, config.isProduction);
+    const firstDay = dayjs(lastStatistic.start).add(1, 'day');
+    const energyData = await client.getEnergyData(firstDay);
+    incrementSums(energyData, lastStatistic.sum);
+    await haClient.saveStatistics(config.prm, config.name, config.isProduction, energyData);
+  }
+
+  // Initialize or sync data
+  for (const dataType in userConfig) {
+    const config = userConfig[dataType];
+
+    if (config?.action === 'sync') {
+      info(`PRM ${config.prm} found in configuration for ${dataType}`);
+
+      const isNew = await haClient.isNewPRM(config.prm, config.isProduction);
+      if (isNew) {
+        await init(config);
+      } else {
+        await sync(config);
+      }
     }
   }
 
-  let isNewC = false;
-  let isNewP = false;
-  if (userConfig.consumption) {
-    isNewC = await haClient.isNewPRM(userConfig.consumption.prm);
-  }
-  if (userConfig.production) {
-    isNewP = await haClient.isNewPRM(userConfig.production.prm + 'p');
-  }
-  if (isNewP || isNewC) {
-    await init();
-  } else {
-    await sync();
-  }
   haClient.disconnect();
 
+  // Setup cron job
   const randomMinute = Math.floor(Math.random() * 59);
   const randomSecond = Math.floor(Math.random() * 59);
 
-  if (userConfig.consumption || userConfig.production) {
-    info(
-      `Data synchronization planned every day at ` +
-        `06:${randomMinute.toString().padStart(2, '0')}:${randomSecond.toString().padStart(2, '0')} and ` +
-        `09:${randomMinute.toString().padStart(2, '0')}:${randomSecond.toString().padStart(2, '0')}`,
-    );
+  info(
+    `Data synchronization planned every day at ` +
+      `06:${randomMinute.toString().padStart(2, '0')}:${randomSecond.toString().padStart(2, '0')} and ` +
+      `09:${randomMinute.toString().padStart(2, '0')}:${randomSecond.toString().padStart(2, '0')}`,
+  );
 
-    cron.schedule(`${randomSecond} ${randomMinute} 6,9 * * *`, async () => {
-      await haClient.connect();
-      await sync();
-      haClient.disconnect();
-    });
-  }
+  cron.schedule(`${randomSecond} ${randomMinute} 6,9 * * *`, async () => {
+    await haClient.connect();
+    for (const dataType in userConfig) {
+      if (userConfig[dataType]?.action === 'sync') {
+        await sync(userConfig[dataType]);
+      }
+    }
+
+    haClient.disconnect();
+  });
 }
 
 function incrementSums(data: { sum: number }[], value: number) {
