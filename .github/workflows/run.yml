@@ -10,7 +10,7 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -21,22 +21,22 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
           node-version: 18
       - run: npm ci
       - run: npm run build
 
-  build:
-    name: Build Docker image
+  build_add_on:
+    name: Build Add-on Docker images
     runs-on: ubuntu-latest
     if: ${{ !startsWith(github.ref, 'refs/tags/') }}
     needs:
       - lint
       - test
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: home-assistant/builder@master
         with:
           args: |
@@ -45,15 +45,31 @@ jobs:
             --target . \
             --docker-hub ghcr.io/bokub
 
-  publish:
-    name: Build and publish Docker image
+  build_standalone:
+    name: Build standalone Docker image
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/') # Invert
+    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
     needs:
       - lint
       - test
     steps:
-      - uses: actions/checkout@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v5
+        with:
+          push: false
+          platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm/v8,linux/arm64,i386
+          file: ./standalone.Dockerfile
+          tags: ha-linky
+
+  publish_add_ons:
+    name: Build and publish Add-on Docker images
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    needs:
+      - lint
+      - test
+    steps:
+      - uses: actions/checkout@v4
       - uses: docker/login-action@v2
         with:
           registry: ghcr.io
@@ -65,3 +81,25 @@ jobs:
             --all \
             --target . \
             --docker-hub ghcr.io/bokub
+
+  publish_standalone:
+    name: Build and publish standalone Docker image
+    runs-on: ubuntu-latest
+    #    if: startsWith(github.ref, 'refs/tags/')
+    needs:
+      - lint
+      - test
+    steps:
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: bokub
+          password: ${{ secrets.CR_PAT }}
+      - uses: docker/build-push-action@v5
+        with:
+          push: true
+          platforms: linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm/v8,linux/arm64,i386
+          file: ./standalone.Dockerfile
+          tags: ghcr.io/bokub/ha-linky:latest,ghcr.io/bokub/ha-linky:1.2.0
+#          tags: ghcr.io/bokub/ha-linky:latest,ghcr.io/bokub/ha-linky:${{ github.ref_name }}
