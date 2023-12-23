@@ -4,7 +4,8 @@ import { auth } from 'home-assistant-js-websocket/dist/messages.js';
 import { debug, warn } from './log.js';
 import dayjs from 'dayjs';
 
-const WS_URL = 'ws://supervisor/core/websocket';
+const WS_URL = process.env.WS_URL || 'ws://supervisor/core/websocket';
+const TOKEN = process.env.SUPERVISOR_TOKEN;
 
 export type SuccessMessage = {
   id: string;
@@ -62,7 +63,7 @@ export class HomeAssistantClient {
               }
             });
 
-            connection.sendUTF(JSON.stringify(auth(process.env.SUPERVISOR_TOKEN)));
+            connection.sendUTF(JSON.stringify(auth(TOKEN)));
           }
         });
       });
