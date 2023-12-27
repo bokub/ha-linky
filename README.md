@@ -96,3 +96,59 @@ Revenez sur l'onglet _Configuration_ de l'add-on et changez la valeur de `consum
 Ouvrez ensuite l'onglet _Journal_ / _Log_ pour vérifier que la remise à zéro s'est bien déroulée.
 
 Au prochain démarrage, si `consumption action` (ou `production action`) est repassé à `sync`, **HA Linky** réimportera à nouveau toutes vos données. Cette manipulation peut surcharger le serveur de **Conso API**, ne l'utilisez donc que si nécessaire pour ne pas risquer un ban !
+
+## Installation standalone
+
+Si votre installation de Home Assistant ne vous permet pas d'accéder au système d'add-ons, il est également possible de lancer HA Linky en utilisant Docker
+
+### Setup
+
+Construisez une image Docker `ha-linky` adaptée à votre système avec la commande suivante :
+
+```sh
+docker build https://github.com/bokub/ha-linky.git -f standalone.Dockerfile -t ha-linky
+```
+
+Créez ensuite un fichier nommé `options.json`, au format suivant, puis suivez les instructions du paragraphe "Configuration" ci-dessus pour le remplir.
+
+```json
+{
+  "consumption PRM": "",
+  "consumption token": "",
+  "consumption name": "Linky consumption",
+  "consumption action": "sync",
+  "production PRM": "",
+  "production token": "",
+  "production name": "Linky production",
+  "production action": "sync"
+}
+```
+
+Créez un jeton d'accès longue durée depuis la page de votre profil Home Assistant (accessible en cliquant sur vos initiales en bas du menu latéral)
+
+### Lancement
+
+Vous pouvez désormais lancer l'image Docker de HA Linky avec la commande `docker run` **ou** via Docker compose, selon vos préférences.
+
+Dans les deux cas, remplacez :
+
+- `<options-folder>` par le **dossier** contenant le fichier `options.json`
+- `<token>` par le jeton d'accès **Home Assistant** que vous avez créé juste avant
+- `<ha-ip>` par l'**IP** de votre instance Home assistant (avec le port si nécessaire)
+
+```sh
+# docker run
+docker run -e SUPERVISOR_TOKEN='<token>' -e WS_URL='ws://<ha-ip>/api/websocket' -v <options-folder>:/data ha-linky
+```
+
+```yml
+# docker-compose.yml
+services:
+  ha-linky:
+    image: ha-linky
+    environment:
+      - SUPERVISOR_TOKEN=<token>
+      - WS_URL=ws://<ha-ip>/api/websocket
+    volumes:
+      - <options-folder>:/data
+```
