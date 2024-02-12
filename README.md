@@ -138,12 +138,12 @@ Vous pouvez désormais lancer l'image Docker de HA Linky avec la commande `docke
 Dans les deux cas, remplacez :
 
 - `<options-folder>` par le **dossier** contenant le fichier `options.json`
-- `<token>` par le jeton d'accès **Home Assistant** que vous avez créé juste avant
+- `<jeton>` par le jeton d'accès longue durée que vous avez créé juste avant **dans Home Assistant**
 - `<ha-ip>` par l'**IP** de votre instance Home assistant (avec le port si nécessaire)
 
 ```sh
 # docker run
-docker run -e SUPERVISOR_TOKEN='<token>' -e WS_URL='ws://<ha-ip>/api/websocket' -v <options-folder>:/data ha-linky
+docker run -e SUPERVISOR_TOKEN='<jeton>' -e WS_URL='ws://<ha-ip>/api/websocket' -v <options-folder>:/data ha-linky
 ```
 
 ```yml
@@ -152,7 +152,7 @@ services:
   ha-linky:
     image: ha-linky
     environment:
-      - SUPERVISOR_TOKEN=<token>
+      - SUPERVISOR_TOKEN=<jeton>
       - WS_URL=ws://<ha-ip>/api/websocket
     volumes:
       - <options-folder>:/data
