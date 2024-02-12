@@ -101,6 +101,11 @@ Au prochain démarrage, si `consumption action` (ou `production action`) est rep
 
 Si votre installation de Home Assistant ne vous permet pas d'accéder au système d'add-ons, il est également possible de lancer HA Linky en utilisant Docker
 
+> [!NOTE]
+> Cette méthode n'est pas recommandée et fait office de solution de dépannage pour les personnes ne voulant pas utiliser HAOS et son système d'add-ons. Je ne fournis donc **pas de support**.
+>
+> Ne me demandez pas d'aide parce ne savez pas comment utiliser Docker ou parce que votre cluster Kubernetes ne fonctionne pas, vous avez choisir d'installer Home Assistant avec une méthode "avancée", donc essayez de vous débrouiller par vous même !
+
 ### Setup
 
 Construisez une image Docker `ha-linky` adaptée à votre système avec la commande suivante :
