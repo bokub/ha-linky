@@ -48,6 +48,8 @@ async function main() {
     const client = new LinkyClient(config.token, config.prm, config.isProduction);
     const energyData = await client.getEnergyData(null);
     await haClient.saveStatistics(config.prm, config.name, config.isProduction, energyData);
+    if (config.price > 0)
+      await haClient.saveStatisticsForCost(config.prm, `${config.name}{config.isProduction ? '  Revenue' : ' Cost'}`, config.isProduction, config.price, energyData);
   }
 
   async function sync(config: MeterConfig) {
@@ -73,6 +75,8 @@ async function main() {
     const energyData = await client.getEnergyData(firstDay);
     incrementSums(energyData, lastStatistic.sum);
     await haClient.saveStatistics(config.prm, config.name, config.isProduction, energyData);
+    if (config.price > 0)
+      await haClient.saveStatisticsForCost(config.prm, `${config.name}{config.isProduction ? '  Revenue' : ' Cost'}`, config.isProduction, config.price, energyData);
   }
 
   // Initialize or sync data

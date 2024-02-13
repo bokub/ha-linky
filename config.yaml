@@ -16,18 +16,22 @@ options:
   consumption PRM: ''
   consumption token: ''
   consumption name: 'Linky consumption'
+  consumption price: 0
   consumption action: sync
   production PRM: ''
   production token: ''
   production name: 'Linky production'
+  production price: 0
   production action: sync
 
 schema:
   consumption PRM: str?
   consumption token: str?
   consumption name: str
+  consumption price: float
   consumption action: list(sync|reset)
   production PRM: str?
   production token: str?
   production name: str
+  production price: float
   production action: list(sync|reset)

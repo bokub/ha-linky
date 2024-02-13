@@ -23,8 +23,8 @@ export type ErrorMessage = {
 
 export type ResultMessage = SuccessMessage | ErrorMessage;
 
-function getStatisticId(prm: string, isProduction: boolean) {
-  return `${isProduction ? 'linky_prod' : 'linky'}:${prm}`;
+function getStatisticId(prm: string, isProduction: boolean, forCost : boolean = false) {
+  return `${isProduction ? 'linky_prod' : 'linky'}:${prm}${forCost ? '_cost' : ''}`;
 }
 
 export class HomeAssistantClient {
@@ -109,6 +109,35 @@ export class HomeAssistantClient {
         source: statisticId.split(':')[0],
         statistic_id: statisticId,
         unit_of_measurement: 'Wh',
+      },
+      stats,
+    });
+  }
+
+  public async saveStatisticsForCost(
+    prm: string,
+    name: string,
+    isProduction: boolean,
+    price : float,
+    stats: { start: string; state: number; sum: number }[],
+  ) {
+    const statisticId = getStatisticId(prm, isProduction, true);
+    for (let i = 0; i < stats.length; i++) {
+      stats[i] = {
+        start: stats[i].start,
+        state: stats[i].state * price,
+        sum: stats[i].sum *price,
+      };
+    }
+    await this.sendMessage({
+      type: 'recorder/import_statistics',
+      metadata: {
+        has_mean: false,
+        has_sum: true,
+        name,
+        source: statisticId.split(':')[0],
+        statistic_id: statisticId,
+        unit_of_measurement: '€',
       },
       stats,
     });
