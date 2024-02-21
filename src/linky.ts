@@ -79,6 +79,15 @@ export class LinkyClient {
         debug(`Successfully retrieved daily ${keyword} data from ${from} to ${to}`);
         offset += interval;
       } catch (e) {
+        if (
+          !firstDay &&
+          e.response?.error?.['error_description'] ===
+            "The requested period cannot be anterior to the meter's last activation date"
+        ) {
+          // Not really an error, just a limit reached
+          info(`All available ${keyword} data has been imported`);
+          break;
+        }
         debug(`Cannot fetch daily ${keyword} data from ${from} to ${to}, here is the error:`);
         warn(e);
         break;
