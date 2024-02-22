@@ -23,16 +23,11 @@ export class LinkyClient {
     const keyword = this.isProduction ? 'production' : 'consumption';
 
     let interval = 7;
-    let from = dayjs()
-      .subtract(offset + interval, 'days')
-      .format('YYYY-MM-DD');
 
-    if (
-      firstDay &&
-      dayjs()
-        .subtract(offset + interval, 'days')
-        .isBefore(firstDay, 'day')
-    ) {
+    let fromDate = dayjs().subtract(offset + interval, 'days');
+    let from = fromDate.format('YYYY-MM-DD');
+
+    if (firstDay && (fromDate.isBefore(firstDay, 'day') || fromDate.isSame(firstDay, 'day'))) {
       from = firstDay.format('YYYY-MM-DD');
       limitReached = true;
     }
@@ -56,17 +51,11 @@ export class LinkyClient {
         break;
       }
       interval = 150;
-      from = dayjs()
-        .subtract(offset + interval, 'days')
-        .format('YYYY-MM-DD');
+      fromDate = dayjs().subtract(offset + interval, 'days');
+      from = fromDate.format('YYYY-MM-DD');
       to = dayjs().subtract(offset, 'days').format('YYYY-MM-DD');
 
-      if (
-        firstDay &&
-        dayjs()
-          .subtract(offset + interval, 'days')
-          .isBefore(firstDay, 'day')
-      ) {
+      if (firstDay && (fromDate.isBefore(firstDay, 'day') || fromDate.isSame(firstDay, 'day'))) {
         from = firstDay.format('YYYY-MM-DD');
         limitReached = true;
       }
