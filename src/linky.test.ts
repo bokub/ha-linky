@@ -21,11 +21,11 @@ describe('LinkyClient', () => {
     getDailyConsumption.mockReset();
   });
 
-  it('Should have the right user agent', () => {
+  it('Has the right user agent', () => {
     expect((client as any).session.userAgent).toBe('ha-linky/' + version);
   });
 
-  it('Should fetch all historical data if first parameter is null', async () => {
+  it('Fetches all historical data if first parameter is null', async () => {
     getLoadCurve.mockReturnValue({
       interval_reading: [
         { value: '100', date: '2023-12-31 00:30:00', interval_length: 'PT30M' },
@@ -59,7 +59,7 @@ describe('LinkyClient', () => {
     ]);
   });
 
-  it('Should fetch hourly and daily data when the last statistic is old', async () => {
+  it('Fetches hourly and daily data when the last statistic is old', async () => {
     getLoadCurve.mockReturnValue({
       interval_reading: [{ value: '100', date: '2023-12-25 00:30:00', interval_length: 'PT30M' }],
     });
@@ -78,7 +78,7 @@ describe('LinkyClient', () => {
     ]);
   });
 
-  it('Should fetch only missing hourly data when the last statistic is recent', async () => {
+  it('Fetches only missing hourly data when the last statistic is recent', async () => {
     getLoadCurve.mockReturnValue({
       interval_reading: [{ value: '100', date: '2023-12-25 00:30:00', interval_length: 'PT30M' }],
     });

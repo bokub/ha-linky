@@ -13,7 +13,7 @@ export class LinkyClient {
     this.prm = prm;
     this.isProduction = isProduction;
     this.session = new Session(token, prm);
-    this.session.userAgent = 'ha-linky/1.2.0';
+    this.session.userAgent = 'ha-linky/1.3.0';
   }
 
   public async getEnergyData(firstDay: null | Dayjs): Promise<EnergyDataPoint[]> {
@@ -27,7 +27,7 @@ export class LinkyClient {
     let fromDate = dayjs().subtract(offset + interval, 'days');
     let from = fromDate.format('YYYY-MM-DD');
 
-    if (firstDay && (fromDate.isBefore(firstDay, 'day') || fromDate.isSame(firstDay, 'day'))) {
+    if (LinkyClient.isBefore(fromDate, firstDay)) {
       from = firstDay.format('YYYY-MM-DD');
       limitReached = true;
     }
@@ -55,7 +55,7 @@ export class LinkyClient {
       from = fromDate.format('YYYY-MM-DD');
       to = dayjs().subtract(offset, 'days').format('YYYY-MM-DD');
 
-      if (firstDay && (fromDate.isBefore(firstDay, 'day') || fromDate.isSame(firstDay, 'day'))) {
+      if (LinkyClient.isBefore(fromDate, firstDay)) {
         from = firstDay.format('YYYY-MM-DD');
         limitReached = true;
       }
@@ -70,8 +70,11 @@ export class LinkyClient {
       } catch (e) {
         if (
           !firstDay &&
-          e.response?.error?.['error_description'] ===
-            "The requested period cannot be anterior to the meter's last activation date"
+          [
+            "The requested period cannot be anterior to the meter's last activation date",
+            'The start date must be greater than the history deadline.',
+            'no measure found for this usage point',
+          ].includes(e.response?.error?.['error_description'])
         ) {
           // Not really an error, just a limit reached
           info(`All available ${keyword} data has been imported`);
@@ -135,5 +138,9 @@ export class LinkyClient {
       date,
       value: values.reduce((acc, cur) => acc + cur, 0) / values.length,
     }));
+  }
+
+  static isBefore(a: Dayjs, b: Dayjs): boolean {
+    return b && (a.isBefore(b, 'day') || a.isSame(b, 'day'));
   }
 }

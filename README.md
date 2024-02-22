@@ -39,23 +39,36 @@ Pour utiliser cet add-on, il vous faut :
 
 ## Configuration
 
-Une fois l'add-on installé, rendez-vous dans l'onglet _Configuration_ et remplissez les champs vides
+Une fois l'add-on installé, rendez-vous dans l'onglet _Configuration_.
 
-### Si vous voulez récupérer votre consommation
+La configuration YAML de base comporte 2 compteurs :
 
-- `consumption PRM` : Votre numéro de PRM (14 chiffres) pour la consommation.
+- Le premier pour mesurer la **consommation** d'énergie
+- Le deuxième pour mesurer la **production** d'énergie
+
+Vous pouvez effacer les lignes correspondant à la production si vous ne produisez pas d'électricité, ou rajouter d'autres compteurs si vous en avez besoin.
+
+Pour chaque compteur, remplissez les champs suivants :
+
+- `prm` : Votre numéro de PRM (14 chiffres).
   - Si vous ne le connaissez pas, entrez votre token sur [la page exemples](https://conso.boris.sh/exemples) de Conso API et le PRM s'affichera dans le champ _PRM_
   - Vous pouvez également le trouver sur votre compteur en appuyant sur la touche **+** jusqu’à lire la valeur du _numéro de PRM_.
-- `consumption token` : Votre token **Conso API**
-- `consumption name` : Choisissez le nom qui sera affiché dans les tableaux de bord d'énergie. Vous pourrez le changer plus tard si vous le souhaitez.
-- `consumption action` : Laissez la valeur par défaut: `sync`
+  - Selon les cas, le PRM de consommation peut être identique ou différent de celui qui gère la production.
+  - Les 14 chiffres du PRM doivent être saisis entre guillemets `"`, comme dans l'exemple ci-dessous
+- `token` : Votre token **Conso API**
+- `name` : Choisissez le nom qui sera affiché dans les tableaux de bord d'énergie. Vous pourrez le changer plus tard si vous le souhaitez.
+- `action` : Laissez la valeur par défaut: `sync`
+- `production` : Choisissez `true` si le compteur gère la production d'énergie, `false` sinon
 
-### Si vous produisez de l'électricité et voulez récupérer votre production
+> Exemple de configuration pour un seul compteur, en consommation :
 
-- `production PRM` : Votre numéro de PRM (14 chiffres) pour la production. Selon les cas, il peut être identique ou différent de celui qui gère la consommation.
-- `production token` : Votre token **Conso API** correspondant au PRM de production
-- `production name` : Choisissez le nom qui sera affiché dans les tableaux de bord d'énergie. Vous pourrez le changer plus tard si vous le souhaitez.
-- `production action` : Laissez la valeur par défaut: `sync`
+```yaml
+- prm: '18435095771264'
+  token: abcdef.ghijklmnopqrs.tuvwxyz
+  name: Consommation Linky
+  action: sync
+  production: false
+```
 
 Appliquez les modifications et démarrez / redémarrez l'add-on si ce n'est pas déjà fait
 
@@ -78,7 +91,7 @@ Pour visualiser les données de **HA Linky** dans vos tableaux de bord d'énergi
 
 - Cliquez [ici](https://my.home-assistant.io/redirect/config_energy/), ou ouvrez le menu _Paramètres_ / _Settings_, puis _Tableaux de bord_ / _Dashboards_, puis _Énergie_ / _Energy_
 - Dans la section _Réseau électrique_ / _Electricity grid_, cliquez sur _Ajouter une consommation_ / _Add consumption_
-- Choisissez la statistique correspondant au `consumption name` ou `production name` que vous avez choisi à l'étape de configuration
+- Choisissez la statistique correspondant au `name` que vous avez choisi à l'étape de configuration
 - Cliquez sur _Enregistrer_ / _Save_
 
 ### Bon à savoir
@@ -91,11 +104,11 @@ Pour visualiser les données de **HA Linky** dans vos tableaux de bord d'énergi
 
 En cas de problème, il est toujours possible d'effacer toutes les données de consommation ou de production créées par **HA Linky**
 
-Revenez sur l'onglet _Configuration_ de l'add-on et changez la valeur de `consumption action` (ou `production action`) à `reset`, puis appliquez les modifications et redémarrez l'add-on.
+Revenez sur l'onglet _Configuration_ de l'add-on et changez la valeur de `action` à `reset` sur le compteur qui vous intéresse, puis appliquez les modifications et redémarrez l'add-on.
 
 Ouvrez ensuite l'onglet _Journal_ / _Log_ pour vérifier que la remise à zéro s'est bien déroulée.
 
-Au prochain démarrage, si `consumption action` (ou `production action`) est repassé à `sync`, **HA Linky** réimportera à nouveau toutes vos données. Cette manipulation peut surcharger le serveur de **Conso API**, ne l'utilisez donc que si nécessaire pour ne pas risquer un ban !
+Au prochain démarrage, si `action` est repassé à `sync`, **HA Linky** réimportera à nouveau toutes vos données. Cette manipulation peut surcharger le serveur de **Conso API**, ne l'utilisez donc que si nécessaire pour ne pas risquer un ban !
 
 ## Installation standalone
 
@@ -104,7 +117,8 @@ Si votre installation de Home Assistant ne vous permet pas d'accéder au systèm
 > [!NOTE]
 > Cette méthode n'est pas recommandée et fait office de solution de **dépannage** pour les personnes ne voulant pas utiliser HAOS et son système d'add-ons.
 >
-> Ne me demandez pas d'aide si vous ne savez pas utiliser Docker, ou si votre cluster Kubernetes ne fonctionne pas. Vous avez choisi d'installer Home Assistant avec une méthode "avancée", essayez de vous débrouiller par vous-même !
+> Vous avez choisi d'installer Home Assistant avec une méthode "avancée", vous devriez donc maitriser vos outils.
+> Je ne fournis **pas d'aide** concernant l'utilisation de Docker, Kubernetes, ou tout système autre que HAOS.
 
 ### Setup
 
@@ -118,14 +132,22 @@ Créez ensuite un fichier nommé `options.json`, au format suivant, puis suivez 
 
 ```json
 {
-  "consumption PRM": "",
-  "consumption token": "",
-  "consumption name": "Linky consumption",
-  "consumption action": "sync",
-  "production PRM": "",
-  "production token": "",
-  "production name": "Linky production",
-  "production action": "sync"
+  "meters": [
+    {
+      "prm": "",
+      "token": "",
+      "name": "Linky consumption",
+      "action": "sync",
+      "production": false
+    },
+    {
+      "prm": "",
+      "token": "",
+      "name": "Linky production",
+      "action": "sync",
+      "production": true
+    }
+  ]
 }
 ```
 
