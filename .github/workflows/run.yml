@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
       - run: npm ci
@@ -22,14 +22,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
       - run: npm ci
       - run: npm test
-      - run: npm run build
     env:
       TZ: Europe/Paris
+
+  transpile:
+    name: Transpile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - run: npm ci
+      - run: npm run build
 
   build:
     name: Build Docker images
@@ -38,6 +48,7 @@ jobs:
     needs:
       - lint
       - test
+      - transpile
     steps:
       - uses: actions/checkout@v4
       - uses: home-assistant/builder@master
@@ -55,6 +66,7 @@ jobs:
     needs:
       - lint
       - test
+      - transpile
     steps:
       - uses: actions/checkout@v4
       - uses: docker/login-action@v2
