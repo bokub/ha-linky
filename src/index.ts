@@ -101,9 +101,9 @@ async function main() {
 
   cron.schedule(`${randomSecond} ${randomMinute} 6,9 * * *`, async () => {
     await haClient.connect();
-    for (const dataType in userConfig) {
-      if (userConfig[dataType]?.action === 'sync') {
-        await sync(userConfig[dataType]);
+    for (const config of userConfig.meters) {
+      if (config.action === 'sync') {
+        await sync(config);
       }
     }
 

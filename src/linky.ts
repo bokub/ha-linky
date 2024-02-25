@@ -13,7 +13,7 @@ export class LinkyClient {
     this.prm = prm;
     this.isProduction = isProduction;
     this.session = new Session(token, prm);
-    this.session.userAgent = 'ha-linky/1.3.0';
+    this.session.userAgent = 'ha-linky/1.3.1';
   }
 
   public async getEnergyData(firstDay: null | Dayjs): Promise<EnergyDataPoint[]> {
