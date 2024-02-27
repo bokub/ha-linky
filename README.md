@@ -24,6 +24,7 @@ Pour utiliser cet add-on, il vous faut :
 
 - Un compteur Linky
 - Un espace client Enedis
+- La collecte de la consommation horaire activée sur votre espace client Enedis ([tutoriel](https://github.com/bokub/ha-linky/wiki/Activer-la-collecte-de-la-consommation-horaire))
 - Un token d'accès, à générer sur [Conso API](https://conso.boris.sh/)
 
 ## Installation
@@ -76,7 +77,7 @@ Appliquez les modifications et démarrez / redémarrez l'add-on si ce n'est pas 
 
 Une fois l'add-on démarré, rendez-vous dans l'onglet _Journal_ / _Log_ pour suivre la progression de la synchronisation.
 
-Au premier lancement, **HA Linky** essaiera de récupérer toutes les données de consommation depuis la date d'installation de votre compteur Linky.
+Au premier lancement, **HA Linky** essaiera de récupérer jusqu'à **1 an** de données historiques (sauf si vous fournissez votre propre export CSV).
 
 Ensuite, il synchronisera les données deux fois par jour tant qu'il n'est pas arrêté :
 
@@ -108,7 +109,21 @@ Revenez sur l'onglet _Configuration_ de l'add-on et changez la valeur de `action
 
 Ouvrez ensuite l'onglet _Journal_ / _Log_ pour vérifier que la remise à zéro s'est bien déroulée.
 
-Au prochain démarrage, si `action` est repassé à `sync`, **HA Linky** réimportera à nouveau toutes vos données. Cette manipulation peut surcharger le serveur de **Conso API**, ne l'utilisez donc que si nécessaire pour ne pas risquer un ban !
+Au prochain démarrage, si `action` est repassé à `sync`, **HA Linky** réimportera à nouveau vos données historiques, soit via Conso API, soit via un fichier CSV si vous en avez fourni un (voir paragraphe suivant).
+
+### Import d'historique CSV
+
+Lors de l'**initialisation**, HA Linky télécharge jusqu'à **1 an** de données **quotidiennes** via Conso API.
+
+Si vous souhaitez un historique **plus long** ainsi qu'une **précision horaire**, vous pouvez importer un fichier CSV à partir duquel HA Linky pourra extraire les données.
+
+La démarche à suivre est la suivante :
+
+- Téléchargez un export de vos données **horaires** depuis votre espace client Enedis ([tutoriel](https://github.com/bokub/ha-linky/wiki/T%C3%A9l%C3%A9charger-son-historique-au-format-CSV))
+- Déposez ce fichier dans le dossier `/addon_configs/cf6b56a3_linky` ([tutoriel](https://github.com/bokub/ha-linky/wiki/Importer-un-fichier-CSV-dans-Home-Assistant))
+- Si vous avez déjà importé des données dans Home Assistant, faites une remise à zéro en suivant le paragraphe précédent
+- Repassez l'action du compteur à `sync` et redémarrez l'add-on
+- Si un fichier CSV correspondant à votre PRM est trouvé, HA Linky l'utilisera pour initialiser les données au lieu d'appeler l'API.
 
 ## Installation standalone
 

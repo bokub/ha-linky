@@ -1,9 +1,13 @@
-import { AveragePowerResponse, EnergyResponse, Session } from 'linky';
+import { Session } from 'linky';
 import dayjs, { Dayjs } from 'dayjs';
 import { debug, info, warn } from './log.js';
-
-export type LinkyDataPoint = { date: string; value: number };
-export type EnergyDataPoint = { start: string; state: number; sum: number };
+import {
+  formatDailyData,
+  formatLoadCurve,
+  type EnergyDataPoint,
+  type LinkyDataPoint,
+  formatToEnergy,
+} from './format.js';
 
 export class LinkyClient {
   private session: Session;
@@ -13,7 +17,7 @@ export class LinkyClient {
     this.prm = prm;
     this.isProduction = isProduction;
     this.session = new Session(token, prm);
-    this.session.userAgent = 'ha-linky/1.3.1';
+    this.session.userAgent = 'ha-linky/1.4.0';
   }
 
   public async getEnergyData(firstDay: null | Dayjs): Promise<EnergyDataPoint[]> {
@@ -27,7 +31,7 @@ export class LinkyClient {
     let fromDate = dayjs().subtract(offset + interval, 'days');
     let from = fromDate.format('YYYY-MM-DD');
 
-    if (LinkyClient.isBefore(fromDate, firstDay)) {
+    if (isBefore(fromDate, firstDay)) {
       from = firstDay.format('YYYY-MM-DD');
       limitReached = true;
     }
@@ -38,7 +42,7 @@ export class LinkyClient {
       const loadCurve = this.isProduction
         ? await this.session.getProductionLoadCurve(from, to)
         : await this.session.getLoadCurve(from, to);
-      history.unshift(LinkyClient.formatLoadCurve(loadCurve));
+      history.unshift(formatLoadCurve(loadCurve.interval_reading));
       debug(`Successfully retrieved ${keyword} load curve from ${from} to ${to}`);
       offset += interval;
     } catch (e) {
@@ -46,16 +50,17 @@ export class LinkyClient {
       warn(e);
     }
 
-    for (let loop = 0; loop < 10; loop++) {
+    const maxLoops = 2;
+    for (let loop = 0; loop < 2; loop++) {
       if (limitReached) {
         break;
       }
-      interval = 150;
+      interval = (365 - 7) / maxLoops;
       fromDate = dayjs().subtract(offset + interval, 'days');
       from = fromDate.format('YYYY-MM-DD');
       to = dayjs().subtract(offset, 'days').format('YYYY-MM-DD');
 
-      if (LinkyClient.isBefore(fromDate, firstDay)) {
+      if (isBefore(fromDate, firstDay)) {
         from = firstDay.format('YYYY-MM-DD');
         limitReached = true;
       }
@@ -64,7 +69,7 @@ export class LinkyClient {
         const dailyData = this.isProduction
           ? await this.session.getDailyProduction(from, to)
           : await this.session.getDailyConsumption(from, to);
-        history.unshift(LinkyClient.formatDailyData(dailyData));
+        history.unshift(formatDailyData(dailyData.interval_reading));
         debug(`Successfully retrieved daily ${keyword} data from ${from} to ${to}`);
         offset += interval;
       } catch (e) {
@@ -96,51 +101,10 @@ export class LinkyClient {
       info(`Data import returned ${dataPoints.length} data points from ${intervalFrom} to ${intervalTo}`);
     }
 
-    const result: EnergyDataPoint[] = [];
-    for (let i = 0; i < dataPoints.length; i++) {
-      result[i] = {
-        start: dataPoints[i].date,
-        state: dataPoints[i].value,
-        sum: dataPoints[i].value + (i === 0 ? 0 : result[i - 1].sum),
-      };
-    }
-
-    return result;
+    return formatToEnergy(dataPoints);
   }
+}
 
-  static formatDailyData(data: EnergyResponse): LinkyDataPoint[] {
-    return data.interval_reading.map((r) => ({
-      value: +r.value,
-      date: dayjs(r.date).format('YYYY-MM-DDTHH:mm:ssZ'),
-    }));
-  }
-
-  static formatLoadCurve(data: AveragePowerResponse): LinkyDataPoint[] {
-    const formatted = data.interval_reading.map((r) => ({
-      value: +r.value,
-      date: dayjs(r.date)
-        .subtract((r as any).interval_length.match(/\d+/)[0], 'minute')
-        .startOf('hour')
-        .format('YYYY-MM-DDTHH:mm:ssZ'),
-    }));
-    const grouped = formatted.reduce(
-      (acc, cur) => {
-        const date = cur.date;
-        if (!acc[date]) {
-          acc[date] = [];
-        }
-        acc[date].push(cur.value);
-        return acc;
-      },
-      {} as { [date: string]: number[] },
-    );
-    return Object.entries(grouped).map(([date, values]) => ({
-      date,
-      value: values.reduce((acc, cur) => acc + cur, 0) / values.length,
-    }));
-  }
-
-  static isBefore(a: Dayjs, b: Dayjs): boolean {
-    return b && (a.isBefore(b, 'day') || a.isSame(b, 'day'));
-  }
+function isBefore(a: Dayjs, b: Dayjs): boolean {
+  return b && (a.isBefore(b, 'day') || a.isSame(b, 'day'));
 }

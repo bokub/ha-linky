@@ -1,6 +1,7 @@
 import { HomeAssistantClient } from './ha.js';
 import { LinkyClient } from './linky.js';
 import { getUserConfig, MeterConfig } from './config.js';
+import { getMeterHistory } from './history.js';
 import { debug, error, info, warn } from './log.js';
 import cron from 'node-cron';
 import dayjs from 'dayjs';
@@ -38,10 +39,16 @@ async function main() {
 
   async function init(config: MeterConfig) {
     info(
-      `[${dayjs().format('DD/MM HH:mm')}] New PRM detected, importing as much historical ${
+      `[${dayjs().format('DD/MM HH:mm')}] New PRM detected, historical ${
         config.production ? 'production' : 'consumption'
-      } data as possible`,
+      } data import is starting`,
     );
+
+    const history = await getMeterHistory(config.prm);
+    if (history.length > 0) {
+      await haClient.saveStatistics(config.prm, config.name, config.production, history);
+      return;
+    }
 
     const client = new LinkyClient(config.token, config.prm, config.production);
     const energyData = await client.getEnergyData(null);

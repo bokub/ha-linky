@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.0 - 27 février 2024
+
+- Ajout de l'import de données historiques via un fichier CSV
+
 ## 1.3.1 - 25 février 2024
 
 - Correction de la synchronisation quotidienne qui ne se lançait pas correctement
@@ -14,5 +18,3 @@
 ## 1.2.0 - 15 novembre 2023
 
 - Ajout de la synchronisation de la production d'énergie - merci à @cddu33 pour son aide !
-
-![2023-11-15_09-30](https://github.com/bokub/ha-linky/assets/17952318/e6148d10-cd88-40a0-839e-ea9b7ccbf275)

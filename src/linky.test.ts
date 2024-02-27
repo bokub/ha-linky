@@ -25,7 +25,7 @@ describe('LinkyClient', () => {
     expect((client as any).session.userAgent).toBe('ha-linky/' + version);
   });
 
-  it('Fetches all historical data if first parameter is null', async () => {
+  it('Fetches 1 year of historical data if first parameter is null', async () => {
     getLoadCurve.mockReturnValue({
       interval_reading: [
         { value: '100', date: '2023-12-31 00:30:00', interval_length: 'PT30M' },
@@ -34,26 +34,20 @@ describe('LinkyClient', () => {
       ],
     });
 
-    getDailyConsumption.mockImplementation((start: string) => {
-      if (start.startsWith('2022')) {
-        throw new Error();
-      }
-      return { interval_reading: [{ value: '2000', date: start }] };
-    });
+    getDailyConsumption.mockImplementation((start: string) => ({ interval_reading: [{ value: '2000', date: start }] }));
 
     const result = await client.getEnergyData(null);
 
     expect(getLoadCurve).toHaveBeenCalledOnce();
     expect(getLoadCurve).toHaveBeenCalledWith('2023-12-25', '2024-01-01');
 
-    expect(getDailyConsumption).toHaveBeenCalledTimes(3);
-    expect(getDailyConsumption).toHaveBeenNthCalledWith(1, '2023-07-28', '2023-12-25');
-    expect(getDailyConsumption).toHaveBeenNthCalledWith(2, '2023-02-28', '2023-07-28');
-    expect(getDailyConsumption).toHaveBeenNthCalledWith(3, '2022-10-01', '2023-02-28');
+    expect(getDailyConsumption).toHaveBeenCalledTimes(2);
+    expect(getDailyConsumption).toHaveBeenNthCalledWith(1, '2023-06-29', '2023-12-25');
+    expect(getDailyConsumption).toHaveBeenNthCalledWith(2, '2023-01-01', '2023-06-29');
 
     expect(result).toEqual([
-      { start: '2023-02-28T00:00:00+01:00', state: 2000, sum: 2000 },
-      { start: '2023-07-28T00:00:00+02:00', state: 2000, sum: 4000 },
+      { start: '2023-01-01T00:00:00+01:00', state: 2000, sum: 2000 },
+      { start: '2023-06-29T00:00:00+02:00', state: 2000, sum: 4000 },
       { start: '2023-12-31T00:00:00+01:00', state: 200, sum: 4200 },
       { start: '2023-12-31T01:00:00+01:00', state: 500, sum: 4700 },
     ]);
