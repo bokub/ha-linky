@@ -10,7 +10,7 @@ const userDir = '/addon_configs/cf6b56a3_linky';
 export async function getMeterHistory(prm: string): Promise<EnergyDataPoint[]> {
   if (!existsSync(baseDir)) {
     debug(`Cannot find folder ${userDir}`);
-    return;
+    return [];
   }
   const files = readdirSync(baseDir).filter((file) => file.endsWith('.csv'));
   debug(`Found ${files.length} CSV ${files.length > 1 ? 'files' : 'file'} in ${userDir}`);
