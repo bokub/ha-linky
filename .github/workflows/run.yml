@@ -106,4 +106,4 @@ jobs:
           file: standalone.Dockerfile
           context: .
           push: true
-          tags: ghcr.io/AlixANNERAUD/ha-linky-standalone:latest
+          tags: ghcr.io/alixanneraud/ha-linky-standalone:latest
