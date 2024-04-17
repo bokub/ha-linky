@@ -84,7 +84,7 @@ jobs:
   build_standalone:
     name: Build standalone Docker images
     runs-on: ubuntu-latest
-    if : ${{ !startsWith(github.ref, 'refs/tags/') }}
+    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
     needs:
       - lint
       - test
