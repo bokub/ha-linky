@@ -194,3 +194,5 @@ services:
     volumes:
       - <options-folder>:/data
 ```
+
+Pour importer des fichiers CSV (optionnel), rajoutez simplement un deuxième volume `<csv-folder>:/config` où `<csv-folder>` correspond au **dossier** contenant vos fichiers CSV.
