@@ -39,7 +39,7 @@ async function main() {
 
   async function init(config: MeterConfig) {
     info(
-      `[${dayjs().format('DD/MM HH:mm')}] New PRM detected, historical ${
+      `New PRM detected, historical ${
         config.production ? 'production' : 'consumption'
       } data import is starting`,
     );
@@ -57,7 +57,7 @@ async function main() {
 
   async function sync(config: MeterConfig) {
     info(
-      `[${dayjs().format('DD/MM HH:mm')}] Synchronization started for ${
+      `Synchronization started for ${
         config.production ? 'production' : 'consumption'
       } data`,
     );
