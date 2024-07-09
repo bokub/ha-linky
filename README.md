@@ -192,7 +192,7 @@ services:
     environment:
       - SUPERVISOR_TOKEN=<jeton>
       - WS_URL=ws://<ha-ip>/api/websocket
-      - TZ=Europe/Paris
+      - TZ=<timezone>
     volumes:
       - <options-folder>:/data
 ```
