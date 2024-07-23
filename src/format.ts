@@ -1,16 +1,17 @@
 import dayjs from 'dayjs';
 
+export type LinkyRawPoint = { value: string; date: string; interval_length?: string };
 export type LinkyDataPoint = { date: string; value: number };
-export type EnergyDataPoint = { start: string; state: number; sum: number };
+export type StatisticDataPoint = { start: string; state: number; sum: number };
 
-export function formatDailyData(data: { value: string; date: string }[]): LinkyDataPoint[] {
+export function formatDailyData(data: LinkyRawPoint[]): LinkyDataPoint[] {
   return data.map((r) => ({
     value: +r.value,
     date: dayjs(r.date).format('YYYY-MM-DDTHH:mm:ssZ'),
   }));
 }
 
-export function formatLoadCurve(data: { value: string; date: string; interval_length?: string }[]): LinkyDataPoint[] {
+export function formatLoadCurve(data: LinkyRawPoint[]): LinkyDataPoint[] {
   const formatted = data.map((r) => ({
     value: +r.value,
     date: dayjs(r.date)
@@ -36,8 +37,8 @@ export function formatLoadCurve(data: { value: string; date: string; interval_le
   }));
 }
 
-export function formatToEnergy(data: LinkyDataPoint[]): EnergyDataPoint[] {
-  const result: EnergyDataPoint[] = [];
+export function formatAsStatistics(data: LinkyDataPoint[]): StatisticDataPoint[] {
+  const result: StatisticDataPoint[] = [];
   for (let i = 0; i < data.length; i++) {
     result[i] = {
       start: data[i].date,
@@ -47,4 +48,8 @@ export function formatToEnergy(data: LinkyDataPoint[]): EnergyDataPoint[] {
   }
 
   return result;
+}
+
+export function incrementSums(data: StatisticDataPoint[], value: number): StatisticDataPoint[] {
+  return data.map((item) => ({ ...item, sum: item.sum + value }));
 }

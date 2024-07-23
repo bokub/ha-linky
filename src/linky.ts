@@ -4,9 +4,9 @@ import { debug, info, warn } from './log.js';
 import {
   formatDailyData,
   formatLoadCurve,
-  type EnergyDataPoint,
+  formatAsStatistics,
+  type StatisticDataPoint,
   type LinkyDataPoint,
-  formatToEnergy,
 } from './format.js';
 
 export class LinkyClient {
@@ -20,7 +20,7 @@ export class LinkyClient {
     this.session.userAgent = 'ha-linky/1.4.0';
   }
 
-  public async getEnergyData(firstDay: null | Dayjs): Promise<EnergyDataPoint[]> {
+  public async getEnergyData(firstDay: null | Dayjs): Promise<StatisticDataPoint[]> {
     const history: LinkyDataPoint[][] = [];
     let offset = 0;
     let limitReached = false;
@@ -101,7 +101,7 @@ export class LinkyClient {
       info(`Data import returned ${dataPoints.length} data points from ${intervalFrom} to ${intervalTo}`);
     }
 
-    return formatToEnergy(dataPoints);
+    return formatAsStatistics(dataPoints);
   }
 }
 

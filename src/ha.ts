@@ -3,6 +3,7 @@ import { MSG_TYPE_AUTH_INVALID, MSG_TYPE_AUTH_OK, MSG_TYPE_AUTH_REQUIRED } from 
 import { auth } from 'home-assistant-js-websocket/dist/messages.js';
 import { debug, warn } from './log.js';
 import dayjs from 'dayjs';
+import { StatisticDataPoint } from './format.js';
 
 const WS_URL = process.env.WS_URL || 'ws://supervisor/core/websocket';
 const TOKEN = process.env.SUPERVISOR_TOKEN;
@@ -23,8 +24,9 @@ export type ErrorMessage = {
 
 export type ResultMessage = SuccessMessage | ErrorMessage;
 
-function getStatisticId(prm: string, isProduction: boolean) {
-  return `${isProduction ? 'linky_prod' : 'linky'}:${prm}`;
+function getStatisticId(args: { prm: string; isProduction: boolean; isCost?: boolean }): string {
+  const { prm, isProduction, isCost } = args;
+  return `${isProduction ? 'linky_prod' : 'linky'}:${prm}${isCost ? '_cost' : ''}`;
 }
 
 export class HomeAssistantClient {
@@ -92,30 +94,32 @@ export class HomeAssistantClient {
     });
   }
 
-  public async saveStatistics(
-    prm: string,
-    name: string,
-    isProduction: boolean,
-    stats: { start: string; state: number; sum: number }[],
-  ) {
-    const statisticId = getStatisticId(prm, isProduction);
+  public async saveStatistics(args: {
+    prm: string;
+    name: string;
+    isProduction: boolean;
+    isCost?: boolean;
+    stats: StatisticDataPoint[];
+  }) {
+    const { prm, name, isProduction, isCost, stats } = args;
+    const statisticId = getStatisticId({ prm, isProduction, isCost });
 
     await this.sendMessage({
       type: 'recorder/import_statistics',
       metadata: {
         has_mean: false,
         has_sum: true,
-        name,
+        name: isCost ? `${name} (costs)` : name,
         source: statisticId.split(':')[0],
         statistic_id: statisticId,
-        unit_of_measurement: 'Wh',
+        unit_of_measurement: isCost ? '€' : 'Wh',
       },
       stats,
     });
   }
 
-  public async isNewPRM(prm: string, isProduction: boolean) {
-    const statisticId = getStatisticId(prm, isProduction);
+  public async isNewPRM(args: { prm: string; isProduction: boolean; isCost?: boolean }) {
+    const statisticId = getStatisticId(args);
     const ids = await this.sendMessage({
       type: 'recorder/list_statistic_ids',
       statistic_type: 'sum',
@@ -123,23 +127,23 @@ export class HomeAssistantClient {
     return !ids.result.find((statistic: any) => statistic.statistic_id === statisticId);
   }
 
-  public async findLastStatistic(
-    prm: string,
-    isProduction: boolean,
-  ): Promise<null | {
+  public async findLastStatistic(args: { prm: string; isProduction: boolean; isCost?: boolean }): Promise<null | {
     start: number;
     end: number;
     state: number;
     sum: number;
     change: number;
   }> {
-    const isNew = await this.isNewPRM(prm, isProduction);
+    const { prm, isProduction, isCost } = args;
+    const isNew = await this.isNewPRM({ prm, isProduction, isCost });
     if (isNew) {
-      warn(`PRM ${prm} not found in Home Assistant statistics`);
+      if (!isCost) {
+        warn(`PRM ${prm} not found in Home Assistant statistics`);
+      }
       return null;
     }
 
-    const statisticId = getStatisticId(prm, isProduction);
+    const statisticId = getStatisticId({ prm, isProduction, isCost });
 
     // Loop over the last 52 weeks
     for (let i = 0; i < 52; i++) {
@@ -167,12 +171,13 @@ export class HomeAssistantClient {
   }
 
   public async purge(prm: string, isProduction: boolean) {
-    const statisticId = getStatisticId(prm, isProduction);
+    const statisticId = getStatisticId({ prm, isProduction, isCost: false });
+    const statisticIdWithCost = getStatisticId({ prm, isProduction, isCost: true });
 
     warn(`Removing all statistics for PRM ${prm}`);
     await this.sendMessage({
       type: 'recorder/clear_statistics',
-      statistic_ids: [statisticId],
+      statistic_ids: [statisticId, statisticIdWithCost],
     });
   }
 }

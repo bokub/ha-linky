@@ -16,11 +16,19 @@ describe('getUserConfig', () => {
       "meters": [
         { "prm": "123", "token": "ccc", "name": "Conso", "action": "sync" },
         { "prm": "123", "token": "ppp", "name": "Prod", "action": "reset", "production": true }
-      ]
+      ],
+      "costs": [{ "price": 0.1, "start_date": "2024-07-01", "prm": "123" }]
     }`);
     expect(getUserConfig()).toEqual({
       meters: [
-        { action: 'sync', name: 'Conso', prm: '123', production: false, token: 'ccc' },
+        {
+          action: 'sync',
+          name: 'Conso',
+          prm: '123',
+          production: false,
+          token: 'ccc',
+          costs: [{ price: 0.1, start_date: '2024-07-01' }],
+        },
         { action: 'reset', name: 'Prod', prm: '123', production: true, token: 'ppp' },
       ],
     });

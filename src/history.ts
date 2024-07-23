@@ -1,13 +1,13 @@
 import { readdirSync, createReadStream, existsSync } from 'node:fs';
 import { debug, info, error } from './log.js';
 import { parse } from 'csv-parse';
-import { EnergyDataPoint, formatLoadCurve, formatToEnergy } from './format.js';
+import { StatisticDataPoint, formatLoadCurve, formatAsStatistics } from './format.js';
 import dayjs from 'dayjs';
 
 const baseDir = '/config';
 const userDir = '/addon_configs/cf6b56a3_linky';
 
-export async function getMeterHistory(prm: string): Promise<EnergyDataPoint[]> {
+export async function getMeterHistory(prm: string): Promise<StatisticDataPoint[]> {
   if (!existsSync(baseDir)) {
     debug(`Cannot find folder ${userDir}`);
     return [];
@@ -38,7 +38,7 @@ async function readMetadata(filename: string): Promise<{ [key: string]: string }
   }
 }
 
-async function readHistory(filename: string): Promise<EnergyDataPoint[]> {
+async function readHistory(filename: string): Promise<StatisticDataPoint[]> {
   info(`Importing historical data from ${filename}`);
 
   const parser = createReadStream(`${baseDir}/${filename}`).pipe(
@@ -56,10 +56,12 @@ async function readHistory(filename: string): Promise<EnergyDataPoint[]> {
   }
 
   const intervalFrom = dayjs(records[0].date).format('DD/MM/YYYY');
-  const intervalTo = dayjs(records[records.length - 1].date).format('DD/MM/YYYY');
+  const intervalTo = dayjs(records[records.length - 1].date)
+    .subtract(1, 'minute')
+    .format('DD/MM/YYYY');
 
   info(`Found ${records.length} data points from ${intervalFrom} to ${intervalTo} in CSV file`);
 
   const loadCurve = formatLoadCurve(records);
-  return formatToEnergy(loadCurve);
+  return formatAsStatistics(loadCurve);
 }

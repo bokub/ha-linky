@@ -1,6 +1,6 @@
 name: Linky
 description: Sync Energy dashboards with your Linky smart meter
-version: 1.4.0
+version: 1.5.0
 slug: linky
 init: false
 url: https://github.com/bokub/ha-linky
@@ -27,6 +27,7 @@ options:
       name: 'Linky production'
       action: 'sync'
       production: true
+  costs: []
 schema:
   meters:
     - prm: str?
@@ -34,3 +35,12 @@ schema:
       name: str?
       action: list(sync|reset)
       production: bool?
+  costs:
+    - price: float
+      prm: str?
+      after: str?
+      before: str?
+      weekday:
+        - str?
+      start_date: str?
+      end_date: str?
