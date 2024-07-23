@@ -177,10 +177,11 @@ Dans les deux cas, remplacez :
 - `<options-folder>` par le **dossier** contenant le fichier `options.json`
 - `<jeton>` par le jeton d'accès longue durée que vous avez créé juste avant **dans Home Assistant**
 - `<ha-ip>` par l'**IP** de votre instance Home assistant (avec le port si nécessaire)
+- `<timezone>` par votre timezone (ex. Europe/Paris), si votre système est configuré différement
 
 ```sh
 # docker run
-docker run -e SUPERVISOR_TOKEN='<jeton>' -e WS_URL='ws://<ha-ip>/api/websocket' -v <options-folder>:/data ha-linky
+docker run -e SUPERVISOR_TOKEN='<jeton>' -e WS_URL='ws://<ha-ip>/api/websocket' -e TZ='<timezone>' -v <options-folder>:/data ha-linky
 ```
 
 ```yml
@@ -191,6 +192,7 @@ services:
     environment:
       - SUPERVISOR_TOKEN=<jeton>
       - WS_URL=ws://<ha-ip>/api/websocket
+      - TZ=<timezone>
     volumes:
       - <options-folder>:/data
 ```
