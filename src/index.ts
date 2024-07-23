@@ -2,6 +2,8 @@ import { HomeAssistantClient } from './ha.js';
 import { LinkyClient } from './linky.js';
 import { getUserConfig, MeterConfig } from './config.js';
 import { getMeterHistory } from './history.js';
+import { incrementSums } from './format.js';
+import { computeCosts } from './cost.js';
 import { debug, error, info, warn } from './log.js';
 import cron from 'node-cron';
 import dayjs from 'dayjs';
@@ -44,15 +46,37 @@ async function main() {
       } data import is starting`,
     );
 
-    const history = await getMeterHistory(config.prm);
-    if (history.length > 0) {
-      await haClient.saveStatistics(config.prm, config.name, config.production, history);
+    let energyData = await getMeterHistory(config.prm);
+
+    if (energyData.length === 0) {
+      const client = new LinkyClient(config.token, config.prm, config.production);
+      energyData = await client.getEnergyData(null);
+    }
+
+    if (energyData.length === 0) {
+      warn(`No history found for PRM ${config.prm}`);
       return;
     }
 
-    const client = new LinkyClient(config.token, config.prm, config.production);
-    const energyData = await client.getEnergyData(null);
-    await haClient.saveStatistics(config.prm, config.name, config.production, energyData);
+    await haClient.saveStatistics({
+      prm: config.prm,
+      name: config.name,
+      isProduction: config.production,
+      stats: energyData,
+    });
+
+    if (config.costs) {
+      const costs = computeCosts(energyData, config.costs);
+      if (costs.length > 0) {
+        await haClient.saveStatistics({
+          prm: config.prm,
+          name: config.name,
+          isProduction: config.production,
+          isCost: true,
+          stats: costs,
+        });
+      }
+    }
   }
 
   async function sync(config: MeterConfig) {
@@ -62,7 +86,10 @@ async function main() {
       } data`,
     );
 
-    const lastStatistic = await haClient.findLastStatistic(config.prm, config.production);
+    const lastStatistic = await haClient.findLastStatistic({
+      prm: config.prm,
+      isProduction: config.production,
+    });
     if (!lastStatistic) {
       warn(`Data synchronization failed, no previous statistic found in Home Assistant`);
       return;
@@ -76,8 +103,30 @@ async function main() {
     const client = new LinkyClient(config.token, config.prm, config.production);
     const firstDay = dayjs(lastStatistic.start).add(1, 'day');
     const energyData = await client.getEnergyData(firstDay);
-    incrementSums(energyData, lastStatistic.sum);
-    await haClient.saveStatistics(config.prm, config.name, config.production, energyData);
+    await haClient.saveStatistics({
+      prm: config.prm,
+      name: config.name,
+      isProduction: config.production,
+      stats: incrementSums(energyData, lastStatistic.sum),
+    });
+
+    if (config.costs) {
+      const costs = computeCosts(energyData, config.costs);
+      if (costs.length > 0) {
+        const lastCostStatistic = await haClient.findLastStatistic({
+          prm: config.prm,
+          isProduction: config.production,
+          isCost: true,
+        });
+        await haClient.saveStatistics({
+          prm: config.prm,
+          name: config.name,
+          isProduction: config.production,
+          isCost: true,
+          stats: incrementSums(costs, lastCostStatistic?.sum || 0),
+        });
+      }
+    }
   }
 
   // Initialize or sync data
@@ -85,7 +134,10 @@ async function main() {
     if (config?.action === 'sync') {
       info(`PRM ${config.prm} found in configuration for ${config.production ? 'production' : 'consumption'}`);
 
-      const isNew = await haClient.isNewPRM(config.prm, config.production);
+      const isNew = await haClient.isNewPRM({
+        prm: config.prm,
+        isProduction: config.production,
+      });
       if (isNew) {
         await init(config);
       } else {
@@ -115,13 +167,6 @@ async function main() {
     }
 
     haClient.disconnect();
-  });
-}
-
-function incrementSums(data: { sum: number }[], value: number) {
-  return data.map((item) => {
-    item.sum += value;
-    return item;
   });
 }
 

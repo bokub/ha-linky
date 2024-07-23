@@ -6,12 +6,22 @@ export type MeterConfig = {
   name: string;
   action: 'sync' | 'reset';
   production: boolean;
+  costs?: CostConfig[];
+};
+
+export type CostConfig = {
+  price: number;
+  after?: string;
+  before?: string;
+  weekday?: Array<'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'>;
+  start_date?: string;
+  end_date?: string;
 };
 
 export type UserConfig = { meters: MeterConfig[] };
 
 export function getUserConfig(): UserConfig {
-  let parsed: { meters?: any[] } = {};
+  let parsed: { meters?: any[]; costs?: any } = {};
 
   try {
     parsed = JSON.parse(readFileSync('/data/options.json', 'utf8'));
@@ -24,13 +34,41 @@ export function getUserConfig(): UserConfig {
   if (parsed.meters && Array.isArray(parsed.meters) && parsed.meters.length > 0) {
     for (const meter of parsed.meters) {
       if (meter.prm && meter.token) {
-        result.meters.push({
+        const resultMeter: MeterConfig = {
           prm: meter.prm.toString(),
           token: meter.token,
           name: meter.name || 'Linky',
           action: meter.action === 'reset' ? 'reset' : 'sync',
           production: meter.production === true,
-        });
+        };
+        if (!resultMeter.production && Array.isArray(parsed.costs)) {
+          const prmCostConfigs = parsed.costs.filter((cost) => !cost.prm || cost.prm === meter.prm);
+          if (prmCostConfigs.length > 0) {
+            resultMeter.costs = [];
+            for (const cost of prmCostConfigs) {
+              if (cost.price && typeof cost.price === 'number') {
+                const resultCost: CostConfig = { price: cost.price };
+                if (cost.after && typeof cost.after === 'string') {
+                  resultCost.after = cost.after;
+                }
+                if (cost.before && typeof cost.before === 'string') {
+                  resultCost.before = cost.before;
+                }
+                if (cost.weekday && Array.isArray(cost.weekday)) {
+                  resultCost.weekday = cost.weekday;
+                }
+                if (cost.start_date && typeof cost.start_date === 'string') {
+                  resultCost.start_date = cost.start_date;
+                }
+                if (cost.end_date && typeof cost.end_date === 'string') {
+                  resultCost.end_date = cost.end_date;
+                }
+                resultMeter.costs.push(resultCost);
+              }
+            }
+          }
+        }
+        result.meters.push(resultMeter);
       }
     }
   }

@@ -40,7 +40,7 @@ Pour utiliser cet add-on, il vous faut :
 
 ## Configuration
 
-Une fois l'add-on installé, rendez-vous dans l'onglet _Configuration_.
+Une fois l'add-on installé, rendez-vous dans l'onglet _Configuration_ puis dans l'encadré `meters`
 
 La configuration YAML de base comporte 2 compteurs :
 
@@ -93,6 +93,7 @@ Pour visualiser les données de **HA Linky** dans vos tableaux de bord d'énergi
 - Cliquez [ici](https://my.home-assistant.io/redirect/config_energy/), ou ouvrez le menu _Paramètres_ / _Settings_, puis _Tableaux de bord_ / _Dashboards_, puis _Énergie_ / _Energy_
 - Dans la section _Réseau électrique_ / _Electricity grid_, cliquez sur _Ajouter une consommation_ / _Add consumption_
 - Choisissez la statistique correspondant au `name` que vous avez choisi à l'étape de configuration
+- Si vous avez configuré une tarification, cliquez sur _Utiliser une entité de suivi des coûts totaux_, et choisissez la statistique équivalente dont le nom finit par _(costs)_
 - Cliquez sur _Enregistrer_ / _Save_
 
 ### Bon à savoir
@@ -124,6 +125,90 @@ La démarche à suivre est la suivante :
 - Si vous avez déjà importé des données dans Home Assistant, faites une remise à zéro en suivant le paragraphe précédent
 - Repassez l'action du compteur à `sync` et redémarrez l'add-on
 - Si un fichier CSV correspondant à votre PRM est trouvé, HA Linky l'utilisera pour initialiser les données au lieu d'appeler l'API.
+
+### Calcul des coûts
+
+À partir de la version **1.5.0**, vous pouvez fournir une configuration de tarification pour que HA Linky calcule le coût de votre consommation.
+
+La configuration des tarifs est optionnelle, et s'écrit dans l'encadré `costs` de l'onglet _Configuration_, sous forme de liste de tarifs
+
+Chaque item de la liste peut recevoir les paramètres suivants :
+
+| Paramètre    | Description                                                                             | Optionnel |
+| ------------ | --------------------------------------------------------------------------------------- | --------- |
+| `price`      | Coût du kWh en €                                                                        | **Non**   |
+| `prm`        | Numéro de PRM en consommation. Par défaut, tous les PRMs en consommation sont concernés | Oui       |
+| `after`      | Heure à partir de laquelle ce tarif est valable, au format _"HH:00"_                    | Oui       |
+| `before`     | Heure à partir de laquelle ce tarif n'est plus valable, au format _"HH:00"_             | Oui       |
+| `weekday`    | Jours de la semaine pour lesquels ce tarif est valabe (voir exemple ci-dessous)         | Oui       |
+| `start_date` | Date à partir de laquelle ce tarif est valable, au format _"YYYY-MM-DD"_                | Oui       |
+| `end_date`   | Date à partir de laquelle ce tarif n'est plus valable, au format _"YYYY-MM-DD"_         | Oui       |
+
+#### Exemples
+
+Configuration la plus simple : `0,23 € / kWh` quelle que soit la date ou l'heure
+
+```yaml
+- price: 0.23
+```
+
+Configuration HP/HC : `0,21 € / kWh` de 22h à 6h et de 12h à 14h, et `0,25 €` / kWh le reste du temps.
+
+**N.B :** Il faut configurer séparément la période minuit - 6h et la période 22h - minuit
+
+```yaml
+- price: 0.21
+  before: '06:00'
+- price: 0.25
+  after: '06:00'
+  before: '12:00'
+- price: 0.21
+  after: '12:00'
+  before: '14:00'
+- price: 0.25
+  after: '14:00'
+  before: '22:00'
+- price: 0.21
+  after: '22:00'
+```
+
+Configuration par jour de la semaine : `0,24 € / kWh` la semaine, `0,22 € / kWh` le week-end
+
+```yaml
+- price: 0.24
+  weekday:
+    - mon
+    - tue
+    - wed
+    - thu
+    - fri
+- price: 0.22
+  weekday:
+    - sat
+    - sun
+```
+
+Tarif qui évolue au cours du temps : `0,21 € / kWh` jusqu'au 30 juin inclus, `0,22 € / kWh` en juillet et août, puis `0,23 € / kWh` à partir du 1 septembre
+
+```yaml
+- price: 0.21
+  end_date: '2024-07-01'
+- price: 0.22
+  start_date: '2024-07-01'
+  end_date: '2024-09-01'
+- price: 0.23
+  start_date: '2024-09-01'
+```
+
+#### Notes concernant le calcul des coûts
+
+- Vous pouvez combiner **tous** les paramètres (horaires, jours de la semaine, dates, prm), pour personnaliser au maximum le calcul des coûts
+- L'ajout des coûts au tableau de bord Énergie s'effectue en choisissant _Utiliser une entité de suivi des coûts totaux_ dans la fenêtre de configuration de la consommation
+- Le calcul des coûts est effectué en même temps que la consommation est importée dans Home Assistant. Il faudra faire une remise à zéro si vous souhaitez recalculer le coût des consommations déjà importées.
+- La configuration des horaires ne fonctionne que pour les heures piles, autrement dit, les minutes différentes de `:00` n'auront aucun effet
+- Si plusieurs items de la liste sont valides au même moment (chevauchement d'horaires ou de dates par exemple), HA Linky choisira l'item le plus haut placé dans la liste
+- Assurez-vous d'entourer les heures et les dates par des guillemets doubles `"` pour être certain que celles-ci soient bien interprétées par HA Linky
+- Vous pouvez vérifier le coût calculé d'une heure en particulier en vous rendant dans _Outils de développement_, onglet _Statistiques_, puis en cliquant sur l'icône la plus à droite de la ligne qui vous intéresse (flèche montante)
 
 ## Installation standalone
 
@@ -162,7 +247,8 @@ Créez ensuite un fichier nommé `options.json`, au format suivant, puis suivez 
       "action": "sync",
       "production": true
     }
-  ]
+  ],
+  "costs": []
 }
 ```
 
