@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.0 - 23 juillet 2024
+
+- Ajout du calcul des coûts
+
 ## 1.4.0 - 27 février 2024
 
 - Ajout de l'import de données historiques via un fichier CSV
