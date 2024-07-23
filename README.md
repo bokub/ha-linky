@@ -118,7 +118,7 @@ Lors de l'**initialisation**, HA Linky télécharge jusqu'à **1 an** de donnée
 
 Si vous souhaitez un historique **plus long** ainsi qu'une **précision horaire**, vous pouvez importer un fichier CSV à partir duquel HA Linky pourra extraire les données.
 
-La démarche à suivre est la suivante :
+La marche à suivre est la suivante :
 
 - Téléchargez un export de vos données **horaires** depuis votre espace client Enedis ([tutoriel](https://github.com/bokub/ha-linky/wiki/T%C3%A9l%C3%A9charger-son-historique-au-format-CSV))
 - Déposez ce fichier dans le dossier `/addon_configs/cf6b56a3_linky` ([tutoriel](https://github.com/bokub/ha-linky/wiki/Importer-un-fichier-CSV-dans-Home-Assistant))
@@ -207,7 +207,7 @@ Tarif qui évolue au cours du temps : `0,21 € / kWh` jusqu'au 30 juin inclus, 
 - Le calcul des coûts est effectué en même temps que la consommation est importée dans Home Assistant. Il faudra faire une remise à zéro si vous souhaitez recalculer le coût des consommations déjà importées.
 - La configuration des horaires ne fonctionne que pour les heures piles, autrement dit, les minutes différentes de `:00` n'auront aucun effet
 - Si plusieurs items de la liste sont valides au même moment (chevauchement d'horaires ou de dates par exemple), HA Linky choisira l'item le plus haut placé dans la liste
-- Assurez-vous d'entourer les heures et les dates par des guillemets doubles `"` pour être certain que celles-ci soient bien interprétées par HA Linky
+- Assurez-vous d'entourer les heures et les dates par des guillemets doubles `"` ou simples `'` pour être certain que celles-ci soient bien interprétées par HA Linky
 - Vous pouvez vérifier le coût calculé d'une heure en particulier en vous rendant dans _Outils de développement_, onglet _Statistiques_, puis en cliquant sur l'icône la plus à droite de la ligne qui vous intéresse (flèche montante)
 
 ## Installation standalone
