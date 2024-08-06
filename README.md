@@ -12,7 +12,7 @@
 
 **HA Linky** est un add-on pour Home Assistant permettant de synchroniser les données votre compteur Linky avec les tableaux de bord d'énergie de Home Assistant.
 
-Il utilise le module [@bokub/linky](https://github.com/bokub/linky) et le service [Conso API](https://conso.boris.sh/) pour communiquer avec Enedis et récupérer votre consommation.
+Il utilise mon module npm [linky](https://github.com/bokub/linky) et mon service [Conso API](https://conso.boris.sh/) pour communiquer avec Enedis et récupérer votre consommation.
 
 <p align="center">
   <img src="https://github.com/bokub/ha-linky/assets/17952318/ed53a1d5-e0c6-4c50-88ac-576f6542e63b">
