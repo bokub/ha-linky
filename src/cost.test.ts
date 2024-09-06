@@ -28,6 +28,33 @@ describe('Cost computer', () => {
     ]);
   });
 
+  it('Should not bug as described by #69', () => {
+    const result = computeCosts(
+      [
+        { start: '2023-06-01T00:00:00+01:00', state: 1000 * 100, sum: 0 }, // 100 kWh
+        { start: '2024-06-01T00:00:00+01:00', state: 1000 * 100, sum: 0 }, // 100 kWh
+      ],
+      [
+        { price: 0.2516, start_date: '2024-02-01' },
+        { price: 0.2276, start_date: '2023-08-01', end_date: '2024-01-31' },
+        { price: 0.2062, start_date: '2023-02-01', end_date: '2023-07-31' },
+      ],
+    );
+
+    expect(result).toEqual([
+      {
+        start: '2023-06-01T00:00:00+01:00',
+        state: 20.62, // = 100 kWh * 0.2062
+        sum: 20.62,
+      },
+      {
+        start: '2024-06-01T00:00:00+01:00',
+        state: 25.16, // = 100 kWh * 0.2516
+        sum: 20.62 + 25.16,
+      },
+    ]);
+  });
+
   it('Should take weekday in account', () => {
     const result = computeCosts(
       [
