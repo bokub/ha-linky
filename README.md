@@ -1,7 +1,8 @@
 # Home Assistant Linky Add-on
 
 [![Build Status](https://flat.badgen.net/github/checks/bokub/ha-linky?label=build)](https://github.com/bokub/ha-linky/actions/workflows/run.yml?query=branch%3Amaster)
-[![Version](https://flat.badgen.net/github/release/bokub/ha-linky?label=version)](https://github.com/bokub/ha-linky/releases)
+[![Coverage](https://img.shields.io/codecov/c/github/bokub/ha-linky?style=flat-square)](https://app.codecov.io/github/bokub/ha-linky)
+[![Version](https://gradgen.bokub.workers.dev/github/release/bokub/ha-linky?gradient=b65cff,11cbfa&style=flat&label=version)](https://github.com/bokub/ha-linky/releases)
 [![Code style](https://flat.badgen.net/badge/code%20style/prettier/ff69b4)](https://github.com/bokub/prettier-config)
 
 > A **Home Assistant** add-on to sync Energy dashboards with your **Linky** smart meter

@@ -26,7 +26,10 @@ jobs:
         with:
           node-version: 18
       - run: npm ci
-      - run: npm test
+      - run: npm run coverage
+      - uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
     env:
       TZ: Europe/Paris
 
