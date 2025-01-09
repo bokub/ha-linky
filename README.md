@@ -203,9 +203,10 @@ Tarif qui évolue au cours du temps : `0,21 € / kWh` jusqu'au 30 juin inclus, 
 
 #### Notes concernant le calcul des coûts
 
-- Vous pouvez combiner **tous** les paramètres (horaires, jours de la semaine, dates, prm), pour personnaliser au maximum le calcul des coûts
+- Les coûts sont calculés au moment où la consommation est importée dans Home Assistant. Le coût des des consommations déjà importées ne sera pas recalculé, sauf si vous faites une remise à zéro
+- Si vous avez déjà importé toutes vos données de consommation au moment de la mise en place de la configuration des coûts, **il faudra attendre le prochain import** (le lendemain) ou **faire une remise à zéro** pour que l'entité dédiée aux coûts apparaisse dans votre tableau de bord Énergie
 - L'ajout des coûts au tableau de bord Énergie s'effectue en choisissant _Utiliser une entité de suivi des coûts totaux_ dans la fenêtre de configuration de la consommation
-- Le calcul des coûts est effectué en même temps que la consommation est importée dans Home Assistant. Il faudra faire une remise à zéro si vous souhaitez recalculer le coût des consommations déjà importées.
+- Vous pouvez combiner **tous** les paramètres (horaires, jours de la semaine, dates, prm), pour personnaliser au maximum le calcul des coûts
 - La configuration des horaires ne fonctionne que pour les heures piles, autrement dit, les minutes différentes de `:00` n'auront aucun effet
 - Si plusieurs items de la liste sont valides au même moment (chevauchement d'horaires ou de dates par exemple), HA Linky choisira l'item le plus haut placé dans la liste
 - Assurez-vous d'entourer les heures et les dates par des guillemets doubles `"` ou simples `'` pour être certain que celles-ci soient bien interprétées par HA Linky
