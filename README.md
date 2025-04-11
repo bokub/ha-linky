@@ -60,7 +60,7 @@ Pour chaque compteur, remplissez les champs suivants :
 - `token` : Votre token **Conso API**
 - `name` : Choisissez le nom qui sera affiché dans les tableaux de bord d'énergie. Vous pourrez le changer plus tard si vous le souhaitez.
 - `action` : Laissez la valeur par défaut: `sync`
-- `production` : Choisissez `true` si le compteur gère la production d'énergie, `false` sinon
+- `production` : Choisissez `true` pour synchroniser la production éléctrique du compteur ou `false` pour synchroniser la consommation
 
 > Exemple de configuration pour un seul compteur, en consommation :
 
@@ -72,7 +72,30 @@ Pour chaque compteur, remplissez les champs suivants :
   production: false
 ```
 
+> Exemple de configuration pour synchroniser consommation et production du même PRM
+
+```yaml
+- prm: '11111222223333'
+  token: abcdef.ghijklmnopqrs.tuvwxyz
+  name: Consommation Linky
+  action: sync
+  production: false
+
+- prm: '11111222223333'
+  token: abcdef.ghijklmnopqrs.tuvwxyz
+  name: Production Linky
+  action: sync
+  production: true
+```
+
 Appliquez les modifications et démarrez / redémarrez l'add-on si ce n'est pas déjà fait
+
+_**N.B:** Home Assistant va automatiquement ajouter des retours à la ligne avec le caractère `>-`. Pas de panique, c'est normal._
+
+```yaml
+token: >-
+    abcdef.ghijklmnopqrs.tuvwxyz
+```
 
 ## Utilisation / fonctionnement
 
