@@ -94,7 +94,7 @@ _**N.B:** Home Assistant va automatiquement ajouter des retours à la ligne avec
 
 ```yaml
 token: >-
-    abcdef.ghijklmnopqrs.tuvwxyz
+  abcdef.ghijklmnopqrs.tuvwxyz
 ```
 
 ## Utilisation / fonctionnement
