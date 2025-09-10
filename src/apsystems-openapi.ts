@@ -69,7 +69,7 @@ export class ApsOpenApi {
    * @throws {Error} If `systemId` or `ecuId` are missing.
    * @throws {Error} If `monthStr` is not in the valid `YYYY-MM` format.
    */
-  async getEcuDailyConsumption(systemId: string, ecuId: string, monthStr: string): Promise<EnergyResponse> {
+  async getEcuDailyConsumption(systemId: string, ecuId: string, monthStr: string): Promise<number[]> {
     // Check input parameters
     if (!systemId || !ecuId) {
       throw new Error('System and Ecu Ids are mandatory');
@@ -88,9 +88,7 @@ export class ApsOpenApi {
     );
 
     // Build response object
-    return {
-      energy: result.data.map(Number)
-    }
+    return result.data.map(Number)
   }
 
   /**
@@ -103,7 +101,7 @@ export class ApsOpenApi {
    * @throws {Error} If `systemId` or `ecuId` are missing.
    * @throws {Error} If `dayStr` is not in the valid `YYYY-MM-DD` format.
    */
-  async getEcuHourlyConsumption(systemId: string, ecuId: string, dayStr: string): Promise<EnergyResponse> {
+  async getEcuHourlyConsumption(systemId: string, ecuId: string, dayStr: string): Promise<number[]> {
     // Check input parameters
     if (!systemId || !ecuId) {
       throw new Error('System and Ecu Ids are mandatory');
@@ -122,9 +120,7 @@ export class ApsOpenApi {
     );
 
     // Build response object
-    return {
-      energy: result.data.map(Number)
-    }
+    return result.data.map(Number)
   }
 
 
