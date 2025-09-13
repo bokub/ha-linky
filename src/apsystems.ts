@@ -6,7 +6,7 @@ import {
   formatHourlyData,
   formatAsStatistics,
   type StatisticDataPoint,
-  type ApsDataPoint,
+  type EcuDataPoint,
 } from './format.js';
 
 // Get hourly statistics for max 7 days ago
@@ -15,6 +15,8 @@ const HOURLY_DATE_INTERVAL = 7
 const DAILY_DATE_INTERVAL = 2
 
 type Interval = "month" | "day";
+
+export type EcuStatistics = { ecuId: string; data: StatisticDataPoint[] };
 
 export class ApsystemsClient {
   public systemId: string;
@@ -45,8 +47,9 @@ export class ApsystemsClient {
   }
 
 
-  public async getEnergyData(firstDay: null | Dayjs): Promise<StatisticDataPoint[]> {
-    let history: ApsDataPoint[] = [];
+  public async getEnergyData(firstDay: null | Dayjs): Promise<EcuStatistics[]> {
+    const result: EcuStatistics[] = [];
+    let history: EcuDataPoint[][] = [];
     let fromDay: Dayjs = null;
     let fromMonth: Dayjs = null;
     let offset: number = 0;
@@ -62,21 +65,24 @@ export class ApsystemsClient {
       return null;
     }
 
+    // initialise history for each ecu
+    for (let idx: number = 0; idx < this.ecuIds.length; idx++) {
+      history[idx] = [];
+    }
 
     // Get hourly Statistics
-    for (offset = 0, limitReached = false; offset < HOURLY_DATE_INTERVAL; offset++) {
-      [fromDay, limitReached] = this.calculateFromDate('day', firstDay, offset);
-      const fromDayStr = fromDay.format('YYYY-MM-DD');
+    for (let idx: number = 0; idx < this.ecuIds.length; idx++) {
+      for (offset = 0, limitReached = false; offset < HOURLY_DATE_INTERVAL; offset++) {
+        [fromDay, limitReached] = this.calculateFromDate('day', firstDay, offset);
+        const fromDayStr = fromDay.format('YYYY-MM-DD');
 
-      for (let idx: number = 0; idx < this.ecuIds.length; idx++) {
         try {
           const loadDatas = await this.openapi.getEcuHourlyConsumption(
             this.systemId,
             this.ecuIds[idx],
             fromDayStr
           );
-          //TODO: format hourly datas
-          //history.unshift(formatHourlyDatas(loadDatas.energy));
+          history[idx].unshift(...formatHourlyData(fromDayStr, loadDatas));
         } catch(e) {
           error(`Error getting Hourly statistics for system ${this.systemId}, `+
                 `ecu ${this.ecuIds[idx]} on ${fromDayStr}`);
@@ -84,31 +90,33 @@ export class ApsystemsClient {
           limitReached = true;
           break;
         }
-      }
-
-      if (limitReached) {
-        break;
+        if (limitReached) {
+          break;
+        }
       }
     }
 
+    // Get Daily Statistics
+    if (limitReached === false) {
+      for (let idx: number = 0; idx < this.ecuIds.length; idx++) {
+        for (offset = 0, limitReached = false; offset < DAILY_DATE_INTERVAL; offset++) {
+          [fromMonth, limitReached] = this.calculateFromDate(
+            'month', firstDay, HOURLY_DATE_INTERVAL, offset);
+          const fromMonthStr = fromMonth.format('YYYY-MM');
 
-    if (offset === HOURLY_DATE_INTERVAL) {
-      // Get daily Statistics
-      for (offset = 0, limitReached = false; offset < DAILY_DATE_INTERVAL; offset++) {
-        [fromMonth, limitReached] = this.calculateFromDate('month', firstDay,
-                                                           HOURLY_DATE_INTERVAL,
-                                                           offset);
-        const fromMonthStr = fromMonth.format('YYYY-MM');
-
-        for (let idx: number = 0; idx < this.ecuIds.length; idx++) {
           try {
             const loadDatas = await this.openapi.getEcuDailyConsumption(
               this.systemId,
               this.ecuIds[idx],
               fromMonthStr
             );
-          //TODO: formatDaily datas
-          //history.unshift(formatDailyDatas(loadDatas.energy));
+            let formatedDatas = formatDailyData(fromMonthStr, loadDatas);
+            formatedDatas = formatedDatas.filter(d => {
+              const current = dayjs(d.date);
+              return current.isBefore(fromDay) &&
+                (current.isSame(firstDay) || current.isAfter(firstDay));
+            });
+            history[idx].unshift(...formatedDatas);
           } catch(e) {
             error(`Error getting Daily statistics for system ${this.systemId}, `+
                   `ecu ${this.ecuIds[idx]} on ${fromMonthStr}`);
@@ -116,16 +124,21 @@ export class ApsystemsClient {
             limitReached = true;
             break;
           }
-        }
-
-        if (limitReached) {
-          break;
+          if (limitReached) {
+            break;
+          }
         }
       }
     }
 
-    //TODO: Format all Statistics
-    //return formatAsStatistics(history);
-    return null;
+    // Format all Statistics
+    for (let idx: number = 0; idx < this.ecuIds.length; idx++) {
+      const ecuStats = {
+        ecuId: this.ecuIds[idx],
+        data: formatAsStatistics(history[idx])
+      };
+      result.push(ecuStats);
+    }
+    return result;
   }
 }
