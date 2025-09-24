@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 
-export type APSystemsConfig = {
+export type MeterConfig = {
   systemId: string;
-  ecuIds: string[];
+  ecuId: string;
   name: string;
   action: 'sync' | 'reset';
 };
@@ -12,10 +12,10 @@ export type OpenapiConfig = {
   appSecret: string;
 };
 
-export type UserConfig = { aps: APSystemsConfig, api: OpenapiConfig };
+export type UserConfig = { meters: MeterConfig[], api: OpenapiConfig };
 
 export function getUserConfig(): UserConfig {
-  let parsed: { aps?: any; api?: any; } = {};
+  let parsed: { meters?: any[]; openapi?: any; } = {};
 
   try {
     parsed = JSON.parse(readFileSync('/data/options.json', 'utf8'));
@@ -23,30 +23,46 @@ export function getUserConfig(): UserConfig {
     throw new Error('Cannot read user configuration: ' + e.toString());
   }
 
-  const result: UserConfig = { aps: null, api: null };
+  const result: UserConfig = { meters: [], api: null };
 
   // Get OpenAPI config part
-  if (parsed.api && parsed.api.appId && parsed.api.appSecret) {
+  if (parsed.openapi && parsed.openapi.appId && parsed.openapi.appSecret) {
       const resultApi: OpenapiConfig = {
-          appId: parsed.api.appId,
-          appSecret: parsed.api.appSecret,
+          appId: parsed.openapi.appId,
+          appSecret: parsed.openapi.appSecret,
       };
       result.api = resultApi;
   }
 
   // Get APSystems devices config part
-  if (parsed.aps && parsed.aps.systemId && parsed.aps.ecuIds &&
-      Array.isArray(parsed.aps.ecuIds) && parsed.aps.ecuIds.length > 0) {
-    const resultEcu: APSystemsConfig = {
-      systemId: parsed.aps.systemId,
-      ecuIds: parsed.aps.ecuIds,
-      name: parsed.aps.name || 'APSystems',
-      action: parsed.aps.action === 'reset' ? 'reset' : 'sync',
-    };
-    result.aps = resultEcu;
+  if (parsed.meters && Array.isArray(parsed.meters) && parsed.meters.length > 0) {
+    for (const meter of parsed.meters) {
+      if (meter.systemId && meter.ecuId) {
+        const resultMeter: MeterConfig = {
+          systemId: meter.systemId,
+          ecuId: meter.ecuId,
+          name: meter.name || 'APSystems',
+          action: meter.action === 'reset' ? 'reset' : 'sync',
+        };
+        result.meters.push(resultMeter);
+      }
+    }
   }
-  //Suppress duplicate ecu ids
-  result.aps.ecuIds = Array.from(new Set(result.aps.ecuIds));
+  //Suppress duplicate system/ecu ids
+  for (const m in result.meters) {
+    for (const n in result.meters) {
+      if (
+        m !== n &&
+        result.meters[m].systemId === result.meters[n].systemId &&
+        result.meters[m].ecuId === result.meters[n].ecuId
+      ) {
+        throw new Error(
+          `SystemId/EcuId ${result.meters[m].systemId}/${result.meters[m].ecuId} `+
+          `is configured multiple times`
+        );
+      }
+    }
+  }
 
   return result;
 }
