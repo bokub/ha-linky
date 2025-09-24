@@ -19,12 +19,9 @@ type Interval = "month" | "day";
 export type EcuStatistics = { ecuId: string; data: StatisticDataPoint[] };
 
 export class ApsystemsClient {
-  public systemId: string;
-  public ecuIds: string[];
   private openapi: ApsOpenApi;
 
-  constructor(systemId: string, appId: string, appSecret: string) {
-    this.systemId = systemId;
+  constructor(appId: string, appSecret: string) {
     this.openapi = new ApsOpenApi(appId, appSecret);
   }
 
@@ -46,7 +43,7 @@ export class ApsystemsClient {
   }
 
 
-  public async getEnergyData(ecuId:string, firstDay?: Dayjs | null): Promise<StatisticDataPoint[]> {
+  public async getEnergyData(systemId: string, ecuId:string, firstDay?: Dayjs | null): Promise<StatisticDataPoint[]> {
     let history: EcuDataPoint[] = [];
     let fromDay: Dayjs = null;
     let fromMonth: Dayjs = null;
@@ -72,13 +69,13 @@ export class ApsystemsClient {
 
       try {
         const loadDatas = await this.openapi.getEcuHourlyConsumption(
-          this.systemId,
+          systemId,
           ecuId,
           fromDayStr
         );
         history.unshift(...formatHourlyData(fromDayStr, loadDatas));
       } catch(e) {
-        error(`Error getting Hourly statistics for system ${this.systemId}, `+
+        error(`Error getting Hourly statistics for system ${systemId}, `+
               `ecu ${ecuId} on ${fromDayStr}`);
         error(e.toString());
         limitReached = true;
@@ -98,7 +95,7 @@ export class ApsystemsClient {
 
         try {
           const loadDatas = await this.openapi.getEcuDailyConsumption(
-            this.systemId,
+            systemId,
             ecuId,
             fromMonthStr
           );
@@ -110,7 +107,7 @@ export class ApsystemsClient {
           });
           history.unshift(...formatedDatas);
         } catch(e) {
-          error(`Error getting Daily statistics for system ${this.systemId}, `+
+          error(`Error getting Daily statistics for system ${systemId}, `+
                 `ecu ${ecuId} on ${fromMonthStr}`);
           error(e.toString());
           limitReached = true;

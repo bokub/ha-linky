@@ -15,7 +15,7 @@ let client: ApsystemsClient;
 
 describe('ApsystemsClient', () => {
   beforeEach(() => {
-    client = new ApsystemsClient('98', 'ab', 'cd');
+    client = new ApsystemsClient('ab', 'cd');
     getEcuHourlyConsumption.mockReset();
     getEcuDailyConsumption.mockReset();
   });
@@ -27,7 +27,7 @@ describe('ApsystemsClient', () => {
       1.2, 1.1, 1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1
     ]);
 
-    const result = await client.getEnergyData('34', dayjs('2025-09-02'));
+    const result = await client.getEnergyData('98', '34', dayjs('2025-09-02'));
 
     expect(getEcuHourlyConsumption).toHaveBeenCalledTimes(1);
     expect(getEcuHourlyConsumption).toHaveBeenCalledWith('98', '34', '2025-09-02');
@@ -69,7 +69,7 @@ describe('ApsystemsClient', () => {
       1.2, 1.1, 1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1
     ]);
 
-    const result = await client.getEnergyData('34', dayjs('2025-08-30'));
+    const result = await client.getEnergyData('98', '34', dayjs('2025-08-30'));
 
     expect(getEcuHourlyConsumption).toHaveBeenCalledTimes(4);
     expect(getEcuHourlyConsumption).toHaveBeenCalledWith('98', '34', '2025-09-02');
@@ -103,7 +103,7 @@ describe('ApsystemsClient', () => {
       1.26, 1.27, 1.28, 1.29
     ]);
 
-    const result = await client.getEnergyData('34', dayjs('2025-08-10'));
+    const result = await client.getEnergyData('98', '34', dayjs('2025-08-10'));
 
     expect(getEcuHourlyConsumption).toHaveBeenCalledTimes(7);
 
@@ -138,7 +138,7 @@ describe('ApsystemsClient', () => {
       1.26, 1.27, 1.28, 1.29
     ]);
 
-    const result = await client.getEnergyData('34', dayjs('2025-05-10'));
+    const result = await client.getEnergyData('98', '34', dayjs('2025-05-10'));
 
     expect(getEcuHourlyConsumption).toHaveBeenCalledTimes(7);
 
@@ -174,7 +174,7 @@ describe('ApsystemsClient', () => {
       1.26, 1.27, 1.28, 1.29
     ]);
 
-    const result = await client.getEnergyData('34', null);
+    const result = await client.getEnergyData('98', '34', null);
 
     expect(getEcuHourlyConsumption).toHaveBeenCalledTimes(7);
 
