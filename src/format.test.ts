@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { formatHourlyData, formatDailyData } from './format.js';
+import {
+  formatHourlyData,
+  formatDailyData,
+  formatAsStatistics,
+  incrementSums
+} from './format.js';
 
 describe('Datas formatter', () => {
   it('Should format the hourly datas properly', () => {
@@ -75,6 +80,57 @@ describe('Datas formatter', () => {
       { date: '2025-08-29T00:00:00+02:00', value: 1.29 },
       { date: '2025-08-30T00:00:00+02:00', value: 0 },
       { date: '2025-08-31T00:00:00+02:00', value: 0 }
+    ]);
+  });
+
+  it('Should format statistics', () => {
+    const result = formatAsStatistics([
+      { date: '2025-08-01T00:00:00+02:00', value: 1.1 },
+      { date: '2025-08-02T00:00:00+02:00', value: 1.2 },
+      { date: '2025-08-03T00:00:00+02:00', value: 1.3 },
+      { date: '2025-08-04T00:00:00+02:00', value: 1.4 },
+      { date: '2025-08-05T00:00:00+02:00', value: 1.5 },
+      { date: '2025-08-06T00:00:00+02:00', value: 1.6 },
+      { date: '2025-08-07T00:00:00+02:00', value: 1.7 },
+      { date: '2025-08-08T00:00:00+02:00', value: 1.8 },
+      { date: '2025-08-09T00:00:00+02:00', value: 1.9 }
+    ], 10);
+
+    expect(result).toEqual([
+      { start: '2025-08-01T00:00:00+02:00', state: 1100, sum: 1100 },
+      { start: '2025-08-02T00:00:00+02:00', state: 1200, sum: 2300 },
+      { start: '2025-08-03T00:00:00+02:00', state: 1300, sum: 3600 },
+      { start: '2025-08-04T00:00:00+02:00', state: 1400, sum: 5000 },
+      { start: '2025-08-05T00:00:00+02:00', state: 1500, sum: 6500 },
+      { start: '2025-08-06T00:00:00+02:00', state: 1600, sum: 8100 },
+      { start: '2025-08-07T00:00:00+02:00', state: 1700, sum: 9800 },
+      { start: '2025-08-08T00:00:00+02:00', state: 1800, sum: 11600 },
+      { start: '2025-08-09T00:00:00+02:00', state: 1900, sum: 13500 }
+    ]);
+  });
+  it('Should increment sums', () => {
+    const result = incrementSums([
+      { start: '2025-08-01T00:00:00+02:00', state: 1100, sum: 1100 },
+      { start: '2025-08-02T00:00:00+02:00', state: 1200, sum: 2300 },
+      { start: '2025-08-03T00:00:00+02:00', state: 1300, sum: 3600 },
+      { start: '2025-08-04T00:00:00+02:00', state: 1400, sum: 5000 },
+      { start: '2025-08-05T00:00:00+02:00', state: 1500, sum: 6500 },
+      { start: '2025-08-06T00:00:00+02:00', state: 1600, sum: 8100 },
+      { start: '2025-08-07T00:00:00+02:00', state: 1700, sum: 9800 },
+      { start: '2025-08-08T00:00:00+02:00', state: 1800, sum: 11600 },
+      { start: '2025-08-09T00:00:00+02:00', state: 1900, sum: 13500 }
+    ], 10000);
+
+    expect(result).toEqual([
+      { start: '2025-08-01T00:00:00+02:00', state: 1100, sum: 11100 },
+      { start: '2025-08-02T00:00:00+02:00', state: 1200, sum: 12300 },
+      { start: '2025-08-03T00:00:00+02:00', state: 1300, sum: 13600 },
+      { start: '2025-08-04T00:00:00+02:00', state: 1400, sum: 15000 },
+      { start: '2025-08-05T00:00:00+02:00', state: 1500, sum: 16500 },
+      { start: '2025-08-06T00:00:00+02:00', state: 1600, sum: 18100 },
+      { start: '2025-08-07T00:00:00+02:00', state: 1700, sum: 19800 },
+      { start: '2025-08-08T00:00:00+02:00', state: 1800, sum: 21600 },
+      { start: '2025-08-09T00:00:00+02:00', state: 1900, sum: 23500 }
     ]);
   });
 });

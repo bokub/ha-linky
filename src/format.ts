@@ -47,3 +47,7 @@ export function formatAsStatistics(data: EcuDataPoint[]): StatisticDataPoint[] {
   return result;
 }
 
+export function incrementSums(data: StatisticDataPoint[], value: number): StatisticDataPoint[] {
+  return data.map((item) => ({ ...item, sum: item.sum + value }));
+}
+
