@@ -1,12 +1,12 @@
 FROM alpine:latest
 
-LABEL org.opencontainers.image.source=https://github.com/bokub/ha-linky
-LABEL org.opencontainers.image.description="HA Linky Standalone"
-LABEL org.opencontainers.image.licenses=MIT
+LABEL org.opencontainers.image.source=https://github.com/J-Phiz/ha-apsystems
+LABEL org.opencontainers.image.description="HA APSystems Standalone"
+LABEL org.opencontainers.image.licenses=ISC
 
 RUN apk add --no-cache nodejs npm
 
-WORKDIR /linky
+WORKDIR /apsystems
 
 # Install dependencies
 COPY package.json .

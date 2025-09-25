@@ -1,10 +1,10 @@
-name: Linky
-description: Sync Energy dashboards with your Linky smart meter
-version: 1.5.0
-slug: linky
+name: APSystems
+description: Sync Energy dashboards with your APSystems photovoltaic solar panel system
+version: 1.1.0
+slug: apsystems
 init: false
-url: https://github.com/bokub/ha-linky
-image: ghcr.io/bokub/ha-linky-{arch}
+url: https://github.com/J-Phiz/ha-apsystems
+image: ghcr.io/J-Phiz/ha-apsystems-{arch}
 arch:
   - aarch64
   - amd64
@@ -17,30 +17,23 @@ map:
   - addon_config
 options:
   meters:
-    - prm: ''
-      token: ''
-      name: 'Linky consumption'
+    - systemId: ''
+      ecuId: ''
+      name: 'APSystems main residence'
       action: 'sync'
-      production: false
-    - prm: ''
-      token: ''
-      name: 'Linky production'
+    - systemId: ''
+      ecuId: ''
+      name: 'APSystems second residence'
       action: 'sync'
-      production: true
-  costs: []
+  openapi:
+    - appId: ''
+      appSecret: ''
 schema:
   meters:
-    - prm: str?
-      token: str?
+    - systemId: str?
+      ecuId: str?
       name: str?
       action: list(sync|reset)
-      production: bool?
-  costs:
-    - price: float
-      prm: str?
-      after: str?
-      before: str?
-      weekday:
-        - str?
-      start_date: str?
-      end_date: str?
+  openapi:
+    - appId: str?
+      appSecret: str?

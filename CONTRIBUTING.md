@@ -1,4 +1,4 @@
-# Home Assistant Linky Add-on
+# Home Assistant APSystems Add-on
 
 ## Running locally
 
@@ -18,5 +18,5 @@
 docker run --rm --privileged \
 	-v ~/.docker:/root/.docker \
 	-v ./:/data \
-	homeassistant/amd64-builder --all -t /data --test --docker-hub ghcr.io/bokub
+	homeassistant/amd64-builder --all -t /data --test --docker-hub ghcr.io/J-Phiz
 ```
