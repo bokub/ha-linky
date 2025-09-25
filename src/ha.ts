@@ -24,9 +24,8 @@ export type ErrorMessage = {
 
 export type ResultMessage = SuccessMessage | ErrorMessage;
 
-function getStatisticId(args: { prm: string; isProduction: boolean; isCost?: boolean }): string {
-  const { prm, isProduction, isCost } = args;
-  return `${isProduction ? 'linky_prod' : 'linky'}:${prm}${isCost ? '_cost' : ''}`;
+function getStatisticId(systemId: string, ecuId: string): string {
+  return `apsystems:${systemId}_${ecuId}`;
 }
 
 export class HomeAssistantClient {
@@ -95,31 +94,30 @@ export class HomeAssistantClient {
   }
 
   public async saveStatistics(args: {
-    prm: string;
+    systemId: string;
+    ecuId: string;
     name: string;
-    isProduction: boolean;
-    isCost?: boolean;
     stats: StatisticDataPoint[];
   }) {
-    const { prm, name, isProduction, isCost, stats } = args;
-    const statisticId = getStatisticId({ prm, isProduction, isCost });
+    const { systemId, ecuId, name, stats } = args;
+    const statisticId = getStatisticId(systemId, ecuId);
 
     await this.sendMessage({
       type: 'recorder/import_statistics',
       metadata: {
         has_mean: false,
         has_sum: true,
-        name: isCost ? `${name} (costs)` : name,
+        name: name,
         source: statisticId.split(':')[0],
         statistic_id: statisticId,
-        unit_of_measurement: isCost ? '€' : 'Wh',
+        unit_of_measurement: 'Wh',
       },
       stats,
     });
   }
 
-  public async isNewPRM(args: { prm: string; isProduction: boolean; isCost?: boolean }) {
-    const statisticId = getStatisticId(args);
+  public async isNewEcu(systemId: string, ecuId: string) {
+    const statisticId = getStatisticId(systemId, ecuId);
     const ids = await this.sendMessage({
       type: 'recorder/list_statistic_ids',
       statistic_type: 'sum',
@@ -127,23 +125,20 @@ export class HomeAssistantClient {
     return !ids.result.find((statistic: any) => statistic.statistic_id === statisticId);
   }
 
-  public async findLastStatistic(args: { prm: string; isProduction: boolean; isCost?: boolean }): Promise<null | {
+  public async findLastStatistic(systemId: string, ecuId:string): Promise<null | {
     start: number;
     end: number;
     state: number;
     sum: number;
     change: number;
   }> {
-    const { prm, isProduction, isCost } = args;
-    const isNew = await this.isNewPRM({ prm, isProduction, isCost });
+    const isNew = await this.isNewEcu(systemId, ecuId);
     if (isNew) {
-      if (!isCost) {
-        warn(`PRM ${prm} not found in Home Assistant statistics`);
-      }
+      warn(`SystemId/EcuId ${systemId}/${ecuId} not found in Home Assistant statistics`);
       return null;
     }
 
-    const statisticId = getStatisticId({ prm, isProduction, isCost });
+    const statisticId = getStatisticId(systemId, ecuId);
 
     // Loop over the last 52 weeks
     for (let i = 0; i < 52; i++) {
@@ -166,18 +161,16 @@ export class HomeAssistantClient {
       }
     }
 
-    debug(`No statistics found for PRM ${prm} in Home Assistant`);
+    debug(`No statistics found for SystemId/EcuId ${systemId}/${ecuId} in Home Assistant`);
     return null;
   }
 
-  public async purge(prm: string, isProduction: boolean) {
-    const statisticId = getStatisticId({ prm, isProduction, isCost: false });
-    const statisticIdWithCost = getStatisticId({ prm, isProduction, isCost: true });
-
-    warn(`Removing all statistics for PRM ${prm}`);
+  public async purge(systemId: string, ecuId: string) {
+    const statisticId = getStatisticId(systemId, ecuId);
+    warn(`Removing all statistics for SystemId/EcuId ${systemId}/${ecuId}`);
     await this.sendMessage({
       type: 'recorder/clear_statistics',
-      statistic_ids: [statisticId, statisticIdWithCost],
+      statistic_ids: [statisticId],
     });
   }
 }
