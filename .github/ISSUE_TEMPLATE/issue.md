@@ -1,15 +1,15 @@
 ---
 name: Issue
-about: Signaler un bug, demander une fonctionnalité, ou poser une question
+about: Report a bug, request a feature, or ask a question
 title: ''
 labels: ''
 assignees: ''
 ---
 
 <!--
-Si votre question concerne Home Assistant, l'add-on HA-Linky, la configuration... vous êtes au bon endroit !
+If your question concerns Home Assistant, the HA-APSystems add-on, or configuration, you've come to the right place!
 
-En revanche, si votre question concerne la création d'un token Conso API ou la récupération de données (problèmes de serveur, réponse d'Enedis, etc...), il s'agit d'un problème avec Conso API, je vous invite donc à créer une issue là-bas: https://github.com/bokub/conso-api/issues
+However, if your question concerns creating an application id/secret for APSystems OpenAPI, this is an issue with APSystems, so I encourage you to contact them directly.
 
-NB: Afin de faciliter l'analyse de vos problèmes, pensez à inclure un maximum de détails, tels que vos logs, votre configuration, ou des captures d'écran. Merci !
+Note: To facilitate analysis of your issues, please include as much detail as possible, such as your logs, configuration, or screenshots. Thank you!
 -->
