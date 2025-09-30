@@ -1,6 +1,6 @@
 import { ApsOpenApi } from './apsystems-openapi.js';
 import dayjs, { Dayjs, OpUnitType } from 'dayjs';
-import { debug, info, warn, error } from './log.js';
+import { warn, error } from './log.js';
 import {
   formatDailyData,
   formatHourlyData,
@@ -44,7 +44,7 @@ export class ApsystemsClient {
 
 
   public async getEnergyData(systemId: string, ecuId:string, firstDay?: Dayjs | null): Promise<StatisticDataPoint[]> {
-    let history: EcuDataPoint[] = [];
+    const history: EcuDataPoint[] = [];
     let fromDay: Dayjs = null;
     let fromMonth: Dayjs = null;
     let offset: number = 0;
@@ -61,10 +61,9 @@ export class ApsystemsClient {
       return null;
     }
 
-
     // Get hourly Statistics
     for (offset = 0, limitReached = false; offset < HOURLY_DATE_INTERVAL; offset++) {
-      [fromDay, limitReached] = this.calculateFromDate('day', firstDay, offset);
+      [fromDay, limitReached] = this.calculateFromDate('day', firstDay, offset);
       const fromDayStr = fromDay.format('YYYY-MM-DD');
 
       try {
@@ -89,7 +88,7 @@ export class ApsystemsClient {
     // Get Daily Statistics
     if (limitReached === false) {
       for (offset = 0, limitReached = false; offset < DAILY_DATE_INTERVAL; offset++) {
-        [fromMonth, limitReached] = this.calculateFromDate(
+        [fromMonth, limitReached] = this.calculateFromDate(
           'month', firstDay, HOURLY_DATE_INTERVAL, offset);
         const fromMonthStr = fromMonth.format('YYYY-MM');
 

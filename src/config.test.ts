@@ -30,7 +30,7 @@ describe('getUserConfig', () => {
       api: { appId: "246bdf", appSecret: "135ace" },
       meters: [
         { action: "sync", name: "MyAPSys1", systemId: "123456789", ecuId: "a1b2c" },
-        { action: "sync", name: "MyAPSys2", systemId: "123456789", ecuId: "d3e4f" }
+        { action: "sync", name: "MyAPSys2", systemId: "123456789", ecuId: "d3e4f" }
       ]
     });
   });
@@ -50,7 +50,7 @@ describe('getUserConfig', () => {
       api: { appId: "246bdf", appSecret: "135ace" },
       meters: [
         { action: "sync", name: "APSystems", systemId: "123456789", ecuId: "a1b2c" },
-        { action: "sync", name: "APSystems", systemId: "123456789", ecuId: "d3e4f" }
+        { action: "sync", name: "APSystems", systemId: "123456789", ecuId: "d3e4f" }
       ]
     });
   });

@@ -1,3 +1,4 @@
+import process from "node:process";
 import { getUserConfig, MeterConfig } from './config.js';
 import { ApsystemsClient } from './apsystems.js';
 import { HomeAssistantClient } from './ha.js';

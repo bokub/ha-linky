@@ -1,7 +1,8 @@
 import axios, { AxiosError } from 'axios';
 import qs from 'qs';
 import crypto from 'crypto';
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
+import { Buffer } from "buffer";
 
 
 const OPENAPI_BASE_URL = "https://api.apsystemsema.com:9282/user/api/v2";
@@ -187,7 +188,6 @@ export class ApsOpenApi {
           throw new Error(`OpenAPI cannot get result: (code:${res.data.code}) ` +
                           JSON.stringify(res.data.data));
         }
-        return res.data;
       })
       .catch((err) => {
         if (err.response) {

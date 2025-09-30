@@ -1,3 +1,4 @@
+import process from "node:process";
 import ws, { Message } from 'websocket';
 import { MSG_TYPE_AUTH_INVALID, MSG_TYPE_AUTH_OK, MSG_TYPE_AUTH_REQUIRED } from 'home-assistant-js-websocket';
 import { auth } from 'home-assistant-js-websocket/dist/messages.js';
