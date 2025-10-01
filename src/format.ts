@@ -23,7 +23,7 @@ export function formatDailyData(monthStr: string, data: number[]): EcuDataPoint[
   const daysInMonth = firstDay.daysInMonth();
 
   for (let day = 1; day <= daysInMonth; day++) {
-    const value = data[day-1] ?? 0; // if no value, use 0
+    const value = data[day - 1] ?? 0; // if no value, use 0
     datas.push({
       date: dayjs(monthStr).date(day).hour(0).minute(0).second(0).format(),
       value,
@@ -40,14 +40,16 @@ export function formatAsStatistics(data: EcuDataPoint[]): StatisticDataPoint[] {
     result[i] = {
       start: data[i].date,
       state: data[i].value * 1000, //Value in Watt/h
-      sum: (data[i].value * 1000) + (i === 0 ? 0 : result[i - 1].sum),
+      sum: data[i].value * 1000 + (i === 0 ? 0 : result[i - 1].sum),
     };
   }
 
   return result;
 }
 
-export function incrementSums(data: StatisticDataPoint[], value: number): StatisticDataPoint[] {
+export function incrementSums(
+  data: StatisticDataPoint[],
+  value: number,
+): StatisticDataPoint[] {
   return data.map((item) => ({ ...item, sum: item.sum + value }));
 }
-

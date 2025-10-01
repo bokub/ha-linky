@@ -12,10 +12,10 @@ export type OpenapiConfig = {
   appSecret: string;
 };
 
-export type UserConfig = { meters: MeterConfig[], api: OpenapiConfig };
+export type UserConfig = { meters: MeterConfig[]; api: OpenapiConfig };
 
 export function getUserConfig(): UserConfig {
-  let parsed: { meters?: any[]; openapi?: any; } = {};
+  let parsed: { meters?: any[]; openapi?: any } = {};
 
   try {
     parsed = JSON.parse(readFileSync('/data/options.json', 'utf8'));
@@ -27,11 +27,11 @@ export function getUserConfig(): UserConfig {
 
   // Get OpenAPI config part
   if (parsed.openapi && parsed.openapi.appId && parsed.openapi.appSecret) {
-      const resultApi: OpenapiConfig = {
-          appId: parsed.openapi.appId,
-          appSecret: parsed.openapi.appSecret,
-      };
-      result.api = resultApi;
+    const resultApi: OpenapiConfig = {
+      appId: parsed.openapi.appId,
+      appSecret: parsed.openapi.appSecret,
+    };
+    result.api = resultApi;
   }
 
   // Get APSystems devices config part
@@ -57,8 +57,8 @@ export function getUserConfig(): UserConfig {
         result.meters[m].ecuId === result.meters[n].ecuId
       ) {
         throw new Error(
-          `SystemId/EcuId ${result.meters[m].systemId}/${result.meters[m].ecuId} `+
-          `is configured multiple times`
+          `SystemId/EcuId ${result.meters[m].systemId}/${result.meters[m].ecuId} ` +
+            `is configured multiple times`,
         );
       }
     }

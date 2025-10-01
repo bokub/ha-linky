@@ -27,11 +27,11 @@ describe('getUserConfig', () => {
       "openapi": { "appId": "246bdf", "appSecret": "135ace" }
     }`);
     expect(getUserConfig()).toEqual({
-      api: { appId: "246bdf", appSecret: "135ace" },
+      api: { appId: '246bdf', appSecret: '135ace' },
       meters: [
-        { action: "sync", name: "MyAPSys1", systemId: "123456789", ecuId: "a1b2c" },
-        { action: "sync", name: "MyAPSys2", systemId: "123456789", ecuId: "d3e4f" }
-      ]
+        { action: 'sync', name: 'MyAPSys1', systemId: '123456789', ecuId: 'a1b2c' },
+        { action: 'sync', name: 'MyAPSys2', systemId: '123456789', ecuId: 'd3e4f' },
+      ],
     });
   });
 
@@ -47,11 +47,11 @@ describe('getUserConfig', () => {
       "openapi": { "appId": "246bdf", "appSecret": "135ace" }
     }`);
     expect(getUserConfig()).toEqual({
-      api: { appId: "246bdf", appSecret: "135ace" },
+      api: { appId: '246bdf', appSecret: '135ace' },
       meters: [
-        { action: "sync", name: "APSystems", systemId: "123456789", ecuId: "a1b2c" },
-        { action: "sync", name: "APSystems", systemId: "123456789", ecuId: "d3e4f" }
-      ]
+        { action: 'sync', name: 'APSystems', systemId: '123456789', ecuId: 'a1b2c' },
+        { action: 'sync', name: 'APSystems', systemId: '123456789', ecuId: 'd3e4f' },
+      ],
     });
   });
 
@@ -65,10 +65,10 @@ describe('getUserConfig', () => {
       "openapi": { "appId": "246bdf", "appSecret": "135ace" }
     }`);
     expect(getUserConfig()).toEqual({
-      api: { appId: "246bdf", appSecret: "135ace" },
+      api: { appId: '246bdf', appSecret: '135ace' },
       meters: [
-        { action: "reset", name: "APSystems", systemId: "123456789", ecuId: "a1b2c" }
-      ]
+        { action: 'reset', name: 'APSystems', systemId: '123456789', ecuId: 'a1b2c' },
+      ],
     });
   });
 
@@ -86,8 +86,7 @@ describe('getUserConfig', () => {
       "openapi": { "appId": "246bdf", "appSecret": "135ace" }
     }`);
     expect(() => getUserConfig()).toThrowError(
-      'SystemId/EcuId 123456789/a1b2c is configured multiple times'
+      'SystemId/EcuId 123456789/a1b2c is configured multiple times',
     );
   });
 });
-

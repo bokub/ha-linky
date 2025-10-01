@@ -1,6 +1,10 @@
-import process from "node:process";
+import process from 'node:process';
 import ws, { Message } from 'websocket';
-import { MSG_TYPE_AUTH_INVALID, MSG_TYPE_AUTH_OK, MSG_TYPE_AUTH_REQUIRED } from 'home-assistant-js-websocket';
+import {
+  MSG_TYPE_AUTH_INVALID,
+  MSG_TYPE_AUTH_OK,
+  MSG_TYPE_AUTH_REQUIRED,
+} from 'home-assistant-js-websocket';
 import { auth } from 'home-assistant-js-websocket/dist/messages.js';
 import { debug, warn } from './log.js';
 import dayjs from 'dayjs';
@@ -42,7 +46,9 @@ export class HomeAssistantClient {
       });
       client.addListener('connect', (connection: ws.connection) => {
         connection.on('error', (error) => {
-          reject('Connection with Home Assistant returned an error : ' + error.toString());
+          reject(
+            'Connection with Home Assistant returned an error : ' + error.toString(),
+          );
         });
 
         connection.on('close', () => {
@@ -50,7 +56,10 @@ export class HomeAssistantClient {
         });
 
         connection.once('message', (message: Message) => {
-          if (message.type === 'utf8' && JSON.parse(message.utf8Data).type === MSG_TYPE_AUTH_REQUIRED) {
+          if (
+            message.type === 'utf8' &&
+            JSON.parse(message.utf8Data).type === MSG_TYPE_AUTH_REQUIRED
+          ) {
             connection.once('message', (message) => {
               if (message.type === 'utf8') {
                 const parsed: { type: string } = JSON.parse(message.utf8Data);
@@ -126,7 +135,10 @@ export class HomeAssistantClient {
     return !ids.result.find((statistic: any) => statistic.statistic_id === statisticId);
   }
 
-  public async findLastStatistic(systemId: string, ecuId:string): Promise<null | {
+  public async findLastStatistic(
+    systemId: string,
+    ecuId: string,
+  ): Promise<null | {
     start: number;
     end: number;
     state: number;
@@ -162,7 +174,9 @@ export class HomeAssistantClient {
       }
     }
 
-    debug(`No statistics found for SystemId/EcuId ${systemId}/${ecuId} in Home Assistant`);
+    debug(
+      `No statistics found for SystemId/EcuId ${systemId}/${ecuId} in Home Assistant`,
+    );
     return null;
   }
 

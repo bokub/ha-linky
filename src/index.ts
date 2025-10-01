@@ -1,4 +1,4 @@
-import process from "node:process";
+import process from 'node:process';
 import { getUserConfig, MeterConfig } from './config.js';
 import { ApsystemsClient } from './apsystems.js';
 import { HomeAssistantClient } from './ha.js';
@@ -53,7 +53,7 @@ async function handleResets(userConfig, haClient) {
 }
 
 function nothingToSync(userConfig) {
-  return userConfig.meters.every(m => m.action !== 'sync');
+  return userConfig.meters.every((m) => m.action !== 'sync');
 }
 
 async function handleSyncs(userConfig, haClient, apClient) {
@@ -71,8 +71,14 @@ async function handleSyncs(userConfig, haClient, apClient) {
   }
 }
 
-async function initMeter(config: MeterConfig, haClient: HomeAssistantClient, apClient: ApsystemsClient) {
-  info(`[${dayjs().format('DD/MM HH:mm')}] New SystemId/EcuId detected, historical data import is starting`);
+async function initMeter(
+  config: MeterConfig,
+  haClient: HomeAssistantClient,
+  apClient: ApsystemsClient,
+) {
+  info(
+    `[${dayjs().format('DD/MM HH:mm')}] New SystemId/EcuId detected, historical data import is starting`,
+  );
 
   const energyData = await apClient.getEnergyData(config.systemId, config.ecuId, null);
 
@@ -85,21 +91,30 @@ async function initMeter(config: MeterConfig, haClient: HomeAssistantClient, apC
     systemId: config.systemId,
     ecuId: config.ecuId,
     name: config.name,
-    stats: energyData
+    stats: energyData,
   });
 }
 
-async function syncMeter(config: MeterConfig, haClient: HomeAssistantClient, apClient: ApsystemsClient) {
-  info(`[${dayjs().format('DD/MM HH:mm')}] Synchronization started for ${config.systemId}/${config.ecuId}`);
+async function syncMeter(
+  config: MeterConfig,
+  haClient: HomeAssistantClient,
+  apClient: ApsystemsClient,
+) {
+  info(
+    `[${dayjs().format('DD/MM HH:mm')}] Synchronization started for ${config.systemId}/${config.ecuId}`,
+  );
 
   const lastStatistic = await haClient.findLastStatistic(config.systemId, config.ecuId);
   if (!lastStatistic) {
-    warn(`No previous statistic found in Home Assistant for ${config.systemId}/${config.ecuId}`);
+    warn(
+      `No previous statistic found in Home Assistant for ${config.systemId}/${config.ecuId}`,
+    );
     return;
   }
 
-  const isSyncingNeeded = dayjs(lastStatistic.start).isBefore(dayjs().subtract(2, 'days'))
-    && dayjs().hour() >= 6;
+  const isSyncingNeeded =
+    dayjs(lastStatistic.start).isBefore(dayjs().subtract(2, 'days')) &&
+    dayjs().hour() >= 6;
 
   if (!isSyncingNeeded) {
     debug(`Up-to-date: nothing to sync for ${config.systemId}/${config.ecuId}`);
@@ -107,7 +122,11 @@ async function syncMeter(config: MeterConfig, haClient: HomeAssistantClient, apC
   }
 
   const firstDay = dayjs(lastStatistic.start).add(1, 'day');
-  const energyData = await apClient.getEnergyData(config.systemId, config.ecuId, firstDay);
+  const energyData = await apClient.getEnergyData(
+    config.systemId,
+    config.ecuId,
+    firstDay,
+  );
 
   await haClient.saveStatistics({
     systemId: config.systemId,
@@ -123,8 +142,8 @@ function scheduleJobs(userConfig) {
 
   info(
     `Data synchronization scheduled every day at ` +
-    `06:${randomMinute.toString().padStart(2, '0')}:${randomSecond.toString().padStart(2, '0')} and ` +
-    `09:${randomMinute.toString().padStart(2, '0')}:${randomSecond.toString().padStart(2, '0')}`
+      `06:${randomMinute.toString().padStart(2, '0')}:${randomSecond.toString().padStart(2, '0')} and ` +
+      `09:${randomMinute.toString().padStart(2, '0')}:${randomSecond.toString().padStart(2, '0')}`,
   );
 
   cron.schedule(`${randomSecond} ${randomMinute} 6,9 * * *`, async () => {
@@ -144,6 +163,6 @@ function scheduleJobs(userConfig) {
 try {
   await main();
 } catch (e) {
-  error("Fatal error in main: " + (e instanceof Error ? e.stack : e));
+  error('Fatal error in main: ' + (e instanceof Error ? e.stack : e));
   process.exit(1);
 }
