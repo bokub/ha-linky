@@ -1,13 +1,7 @@
 import { Session } from 'linky';
 import dayjs, { Dayjs } from 'dayjs';
 import { debug, info, warn } from './log.js';
-import {
-  formatDailyData,
-  formatLoadCurve,
-  formatAsStatistics,
-  type StatisticDataPoint,
-  type LinkyDataPoint,
-} from './format.js';
+import { formatDailyData, formatLoadCurve, type DataPoint } from './format.js';
 
 export class LinkyClient {
   private session: Session;
@@ -17,11 +11,11 @@ export class LinkyClient {
     this.prm = prm;
     this.isProduction = isProduction;
     this.session = new Session(token, prm);
-    this.session.userAgent = 'ha-linky/1.5.0';
+    this.session.userAgent = 'ha-linky/1.6.0';
   }
 
-  public async getEnergyData(firstDay: null | Dayjs): Promise<StatisticDataPoint[]> {
-    const history: LinkyDataPoint[][] = [];
+  public async getEnergyData(firstDay: null | Dayjs): Promise<DataPoint[]> {
+    const history: DataPoint[][] = [];
     let offset = 0;
     let limitReached = false;
     const keyword = this.isProduction ? 'production' : 'consumption';
@@ -42,6 +36,7 @@ export class LinkyClient {
       const loadCurve = this.isProduction
         ? await this.session.getProductionLoadCurve(from, to)
         : await this.session.getLoadCurve(from, to);
+
       history.unshift(formatLoadCurve(loadCurve.interval_reading));
       debug(`Successfully retrieved ${keyword} load curve from ${from} to ${to}`);
       offset += interval;
@@ -91,7 +86,7 @@ export class LinkyClient {
       }
     }
 
-    const dataPoints: LinkyDataPoint[] = history.flat();
+    const dataPoints: DataPoint[] = history.flat();
 
     if (dataPoints.length === 0) {
       warn('Data import returned nothing !');
@@ -101,7 +96,7 @@ export class LinkyClient {
       info(`Data import returned ${dataPoints.length} data points from ${intervalFrom} to ${intervalTo}`);
     }
 
-    return formatAsStatistics(dataPoints);
+    return dataPoints;
   }
 }
 

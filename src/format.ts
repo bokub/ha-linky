@@ -1,28 +1,40 @@
 import dayjs from 'dayjs';
 
-export type LinkyRawPoint = { value: string; date: string; interval_length?: string };
-export type LinkyDataPoint = { date: string; value: number };
-export type StatisticDataPoint = { start: string; state: number; sum: number };
+export type LinkyRawPoint = { value: string; date: string; interval_length?: string }; // Result from Linky API
+export type HistoryRawPoint = { debut: string; kW: string }; // Result from history CSV file
 
-export function formatDailyData(data: LinkyRawPoint[]): LinkyDataPoint[] {
+export type DataPoint = { date: string; value: number }; // Standardized data point. Date is in ISO 8601 format and represents the start of the interval. Value can be W, Wh or EUR.
+export type StatisticDataPoint = { start: string; state: number; sum: number }; // Data point formatted for Home Assistant statistics
+
+export function formatDailyData(data: LinkyRawPoint[]): DataPoint[] {
   return data.map((r) => ({
     value: +r.value,
     date: dayjs(r.date).format('YYYY-MM-DDTHH:mm:ssZ'),
   }));
 }
 
-export function formatLoadCurve(data: LinkyRawPoint[]): LinkyDataPoint[] {
-  const formatted = data.map((r) => ({
-    value: +r.value,
+export function formatHistoryFile(data: HistoryRawPoint[]): DataPoint[] {
+  return data.map((r) => ({
+    value: Number(r.kW.replace(',', '.').replace('null', '0')) * 1000, // Convert kW to W
+    date: dayjs(r.debut).format('YYYY-MM-DDTHH:mm:ssZ'),
+  }));
+}
+
+export function formatLoadCurve(data: LinkyRawPoint[]): DataPoint[] {
+  return data.map((r) => ({
+    value: Number(r.value),
     date: dayjs(r.date)
       .subtract(parseFloat(r.interval_length?.match(/\d+/)[0] || '1'), 'minute')
-      .startOf('hour')
       .format('YYYY-MM-DDTHH:mm:ssZ'),
   }));
+}
 
-  const grouped = formatted.reduce(
+// Group data points by hour and compute the average value for each hour
+// Round result to 2 decimal places
+export function groupDataPointsByHour(data: DataPoint[]): DataPoint[] {
+  const grouped = data.reduce(
     (acc, cur) => {
-      const date = cur.date;
+      const date = dayjs(cur.date).startOf('hour').format('YYYY-MM-DDTHH:mm:ssZ');
       if (!acc[date]) {
         acc[date] = [];
       }
@@ -37,7 +49,7 @@ export function formatLoadCurve(data: LinkyRawPoint[]): LinkyDataPoint[] {
   }));
 }
 
-export function formatAsStatistics(data: LinkyDataPoint[]): StatisticDataPoint[] {
+export function formatAsStatistics(data: DataPoint[]): StatisticDataPoint[] {
   const result: StatisticDataPoint[] = [];
   for (let i = 0; i < data.length; i++) {
     result[i] = {

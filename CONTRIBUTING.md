@@ -8,7 +8,6 @@
 - Click Terminal > Run Task > Start Home Assistant
 - Open [localhost:7123](http://localhost:7123)
 - Install the add-on and configure it
-- To access the add-on logs, open the terminal in VSCode, and run `docker logs addon_local_linky -f`
 - Click the "rebuild" button in the add-on configuration to rebuild the add-on
 - Enjoy!
 

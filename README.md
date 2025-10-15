@@ -138,7 +138,9 @@ Au prochain démarrage, si `action` est repassé à `sync`, **HA Linky** réimpo
 
 ### Import d'historique CSV
 
-Lors de l'**initialisation**, HA Linky télécharge jusqu'à **1 an** de données **quotidiennes** via Conso API.
+Lors de l'**initialisation**, HA Linky télécharge jusqu'à **1 an** de données **quotidiennes** (une valeur par jour) via Conso API.
+
+Dans le cas d'un calcul de coûts avec une configuration HP/HC, les données quotidiennes ne seront pas suffisantes pour un calcul précis.
 
 Si vous souhaitez un historique **plus long** ainsi qu'une **précision horaire**, vous pouvez importer un fichier CSV à partir duquel HA Linky pourra extraire les données.
 
@@ -149,6 +151,7 @@ La marche à suivre est la suivante :
 - Si vous avez déjà importé des données dans Home Assistant, faites une remise à zéro en suivant le paragraphe précédent
 - Repassez l'action du compteur à `sync` et redémarrez l'add-on
 - Si un fichier CSV correspondant à votre PRM est trouvé, HA Linky l'utilisera pour initialiser les données au lieu d'appeler l'API.
+- En cas de gros import, il faudra peut-être attendre une ou deux minutes pour voir les statistiques apparaître dans la configuration du tableau de bord d'énergie
 
 ### Calcul des coûts
 
@@ -158,15 +161,16 @@ La configuration des tarifs est optionnelle, et s'écrit dans l'encadré `costs`
 
 Chaque item de la liste peut recevoir les paramètres suivants :
 
-| Paramètre    | Description                                                                             | Optionnel |
-| ------------ | --------------------------------------------------------------------------------------- | --------- |
-| `price`      | Coût du kWh en €                                                                        | **Non**   |
-| `prm`        | Numéro de PRM en consommation. Par défaut, tous les PRMs en consommation sont concernés | Oui       |
-| `after`      | Heure à partir de laquelle ce tarif est valable, au format _"HH:00"_                    | Oui       |
-| `before`     | Heure à partir de laquelle ce tarif n'est plus valable, au format _"HH:00"_             | Oui       |
-| `weekday`    | Jours de la semaine pour lesquels ce tarif est valabe (voir exemple ci-dessous)         | Oui       |
-| `start_date` | Date à partir de laquelle ce tarif est valable, au format _"YYYY-MM-DD"_                | Oui       |
-| `end_date`   | Date à partir de laquelle ce tarif n'est plus valable, au format _"YYYY-MM-DD"_         | Oui       |
+| Paramètre    | Description                                                                                                                | Optionnel |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------- | --------- |
+| `price`      | Coût du kWh en €                                                                                                           | **Non**   |
+| `prm`        | Numéro de PRM. Si non renseigné, tous les PRMs en consommation/production (selon le paramètre d'en dessous) sont concernés | Oui       |
+| `production` | Si égal à `true`, le tarif sera appliqué à de la production, il s'agira donc techniquement d'un gain plutôt qu'un coût     | Oui       |
+| `after`      | Heure à partir de laquelle ce tarif est valable, au format _"HH:00"_                                                       | Oui       |
+| `before`     | Heure à partir de laquelle ce tarif n'est plus valable, au format _"HH:00"_                                                | Oui       |
+| `weekday`    | Jours de la semaine pour lesquels ce tarif est valabe (voir exemple ci-dessous)                                            | Oui       |
+| `start_date` | Date à partir de laquelle ce tarif est valable, au format _"YYYY-MM-DD"_                                                   | Oui       |
+| `end_date`   | Date à partir de laquelle ce tarif n'est plus valable, au format _"YYYY-MM-DD"_                                            | Oui       |
 
 #### Exemples
 
@@ -176,18 +180,18 @@ Configuration la plus simple : `0,23 € / kWh` quelle que soit la date ou l'heu
 - price: 0.23
 ```
 
-Configuration HP/HC : `0,21 € / kWh` de 22h à 6h et de 12h à 14h, et `0,25 €` / kWh le reste du temps.
+Configuration HP/HC : `0,21 € / kWh` de 22h à 6h30 et de 12h30 à 14h, et `0,25 €` / kWh le reste du temps.
 
-**N.B :** Il faut configurer séparément la période minuit - 6h et la période 22h - minuit
+**⚠️ N.B :** Il faut configurer séparément la période minuit - 6h30 et la période 22h - minuit, comme dans l'exemple ci-dessous
 
 ```yaml
 - price: 0.21
-  before: '06:00'
+  before: '06:30'
 - price: 0.25
-  after: '06:00'
-  before: '12:00'
+  after: '06:30'
+  before: '12:30'
 - price: 0.21
-  after: '12:00'
+  after: '12:30'
   before: '14:00'
 - price: 0.25
   after: '14:00'
@@ -230,7 +234,7 @@ Tarif qui évolue au cours du temps : `0,21 € / kWh` jusqu'au 30 juin inclus, 
 - Si vous avez déjà importé toutes vos données de consommation au moment de la mise en place de la configuration des coûts, **il faudra attendre le prochain import** (le lendemain) ou **faire une remise à zéro** pour que l'entité dédiée aux coûts apparaisse dans votre tableau de bord Énergie
 - L'ajout des coûts au tableau de bord Énergie s'effectue en choisissant _Utiliser une entité de suivi des coûts totaux_ dans la fenêtre de configuration de la consommation
 - Vous pouvez combiner **tous** les paramètres (horaires, jours de la semaine, dates, prm), pour personnaliser au maximum le calcul des coûts
-- La configuration des horaires ne fonctionne que pour les heures piles, autrement dit, les minutes différentes de `:00` n'auront aucun effet
+- La configuration des horaires ne fonctionne que pour les heures pile et les demi-heures, autrement dit, les minutes différentes de `:00` et `:30` pourraient créer des valeurs inattendues
 - Si plusieurs items de la liste sont valides au même moment (chevauchement d'horaires ou de dates par exemple), HA Linky choisira l'item le plus haut placé dans la liste
 - Assurez-vous d'entourer les heures et les dates par des guillemets doubles `"` ou simples `'` pour être certain que celles-ci soient bien interprétées par HA Linky
 - Vous pouvez vérifier le coût calculé d'une heure en particulier en vous rendant dans _Outils de développement_, onglet _Statistiques_, puis en cliquant sur l'icône la plus à droite de la ligne qui vous intéresse (flèche montante)

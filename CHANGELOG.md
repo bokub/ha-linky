@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.6.0 - 15 octobre 2025
+
+- Ajout du calcul des coûts pour les PRM en production
+- Prise en compte des demi-heures dans le calcul des coûts
+- Modification du format du fichier CSV pour l'import d'historique (compatible avec [Conso Downloader](https://github.com/bokub/conso-downloader/tree/master?tab=readme-ov-file#conso-downloader))
+
 ## 1.5.0 - 23 juillet 2024
 
 - Ajout du calcul des coûts

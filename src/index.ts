@@ -2,7 +2,7 @@ import { HomeAssistantClient } from './ha.js';
 import { LinkyClient } from './linky.js';
 import { getUserConfig, MeterConfig } from './config.js';
 import { getMeterHistory } from './history.js';
-import { incrementSums } from './format.js';
+import { formatAsStatistics, groupDataPointsByHour, incrementSums } from './format.js';
 import { computeCosts } from './cost.js';
 import { debug, error, info, warn } from './log.js';
 import cron from 'node-cron';
@@ -46,7 +46,7 @@ async function main() {
       } data import is starting`,
     );
 
-    let energyData = await getMeterHistory(config.prm);
+    let energyData = await getMeterHistory(config.prm, config.production);
 
     if (energyData.length === 0) {
       const client = new LinkyClient(config.token, config.prm, config.production);
@@ -57,23 +57,26 @@ async function main() {
       warn(`No history found for PRM ${config.prm}`);
       return;
     }
+    const energyStatistics = formatAsStatistics(groupDataPointsByHour(energyData));
 
     await haClient.saveStatistics({
       prm: config.prm,
       name: config.name,
       isProduction: config.production,
-      stats: energyData,
+      stats: energyStatistics,
     });
 
     if (config.costs) {
       const costs = computeCosts(energyData, config.costs);
+      const costsStatistics = formatAsStatistics(groupDataPointsByHour(costs));
+
       if (costs.length > 0) {
         await haClient.saveStatistics({
           prm: config.prm,
           name: config.name,
           isProduction: config.production,
           isCost: true,
-          stats: costs,
+          stats: costsStatistics,
         });
       }
     }
@@ -103,16 +106,21 @@ async function main() {
     const client = new LinkyClient(config.token, config.prm, config.production);
     const firstDay = dayjs(lastStatistic.start).add(1, 'day');
     const energyData = await client.getEnergyData(firstDay);
+
+    const energyStatistics = formatAsStatistics(groupDataPointsByHour(energyData));
+
     await haClient.saveStatistics({
       prm: config.prm,
       name: config.name,
       isProduction: config.production,
-      stats: incrementSums(energyData, lastStatistic.sum),
+      stats: incrementSums(energyStatistics, lastStatistic.sum),
     });
 
     if (config.costs) {
       const costs = computeCosts(energyData, config.costs);
-      if (costs.length > 0) {
+      const costsStatistics = formatAsStatistics(groupDataPointsByHour(costs));
+
+      if (costsStatistics.length > 0) {
         const lastCostStatistic = await haClient.findLastStatistic({
           prm: config.prm,
           isProduction: config.production,
@@ -123,7 +131,7 @@ async function main() {
           name: config.name,
           isProduction: config.production,
           isCost: true,
-          stats: incrementSums(costs, lastCostStatistic?.sum || 0),
+          stats: incrementSums(costsStatistics, lastCostStatistic?.sum || 0),
         });
       }
     }

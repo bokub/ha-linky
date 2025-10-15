@@ -41,8 +41,10 @@ export function getUserConfig(): UserConfig {
           action: meter.action === 'reset' ? 'reset' : 'sync',
           production: meter.production === true,
         };
-        if (!resultMeter.production && Array.isArray(parsed.costs)) {
-          const prmCostConfigs = parsed.costs.filter((cost) => !cost.prm || cost.prm === meter.prm);
+        if (Array.isArray(parsed.costs)) {
+          const prmCostConfigs = parsed.costs
+            .filter((cost) => (cost.production === true) === (meter.production === true))
+            .filter((cost) => !cost.prm || cost.prm === meter.prm);
           if (prmCostConfigs.length > 0) {
             resultMeter.costs = [];
             for (const cost of prmCostConfigs) {
