@@ -2,6 +2,7 @@ import { expect, it, vi, describe, beforeEach } from 'vitest';
 import { LinkyClient } from './linky.js';
 import dayjs from 'dayjs';
 import { version } from '../package.json';
+import { formatAsStatistics, groupDataPointsByHour } from './format';
 
 vi.setSystemTime(new Date(2024, 0, 1));
 
@@ -46,6 +47,14 @@ describe('LinkyClient', () => {
     expect(getDailyConsumption).toHaveBeenNthCalledWith(2, '2023-01-01', '2023-06-29');
 
     expect(result).toEqual([
+      { date: '2023-01-01T00:00:00+01:00', value: 2000 },
+      { date: '2023-06-29T00:00:00+02:00', value: 2000 },
+      { date: '2023-12-31T00:00:00+01:00', value: 100 },
+      { date: '2023-12-31T00:30:00+01:00', value: 300 },
+      { date: '2023-12-31T01:00:00+01:00', value: 500 },
+    ]);
+
+    expect(formatAsStatistics(groupDataPointsByHour(result))).toEqual([
       { start: '2023-01-01T00:00:00+01:00', state: 2000, sum: 2000 },
       { start: '2023-06-29T00:00:00+02:00', state: 2000, sum: 4000 },
       { start: '2023-12-31T00:00:00+01:00', state: 200, sum: 4200 },
@@ -67,6 +76,10 @@ describe('LinkyClient', () => {
     expect(getDailyConsumption).toHaveBeenCalledWith('2023-07-28', '2023-12-25');
 
     expect(result).toEqual([
+      { date: '2023-07-28T00:00:00+02:00', value: 2000 },
+      { date: '2023-12-25T00:00:00+01:00', value: 100 },
+    ]);
+    expect(formatAsStatistics(groupDataPointsByHour(result))).toEqual([
       { start: '2023-07-28T00:00:00+02:00', state: 2000, sum: 2000 },
       { start: '2023-12-25T00:00:00+01:00', state: 100, sum: 2100 },
     ]);
@@ -84,6 +97,6 @@ describe('LinkyClient', () => {
 
     expect(getDailyConsumption).not.toHaveBeenCalled();
 
-    expect(result).toEqual([{ start: '2023-12-25T00:00:00+01:00', state: 100, sum: 100 }]);
+    expect(result).toEqual([{ date: '2023-12-25T00:00:00+01:00', value: 100 }]);
   });
 });
