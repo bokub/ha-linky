@@ -2,7 +2,8 @@ import { expect, it, vi, describe, beforeEach } from 'vitest';
 import { LinkyClient } from './linky.js';
 import dayjs from 'dayjs';
 import { version } from '../package.json';
-import { formatAsStatistics, groupDataPointsByHour } from './format';
+import { formatAsStatistics, groupDataPointsByHour } from './format.js';
+import * as fs from 'node:fs';
 
 vi.setSystemTime(new Date(2024, 0, 1));
 
@@ -20,6 +21,12 @@ describe('LinkyClient', () => {
     client = new LinkyClient('', '', false);
     getLoadCurve.mockReset();
     getDailyConsumption.mockReset();
+  });
+
+  it('Has the same version in package.json & config.yaml', () => {
+    const config = fs.readFileSync('config.yaml', 'utf8');
+    const match = config.match(/version:\s*['"]?([\d.]+)['"]?/);
+    expect(version).toBe(match[1]);
   });
 
   it('Has the right user agent', () => {
