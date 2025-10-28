@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.1 - 28 octobre 2025
+
+- Ajout de logs pour mieux comprendre les problèmes de calcul des coûts
+
 ## 1.6.0 - 15 octobre 2025
 
 - Ajout du calcul des coûts pour les PRM en production
