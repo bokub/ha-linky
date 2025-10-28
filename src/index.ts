@@ -70,7 +70,7 @@ async function main() {
       const costs = computeCosts(energyData, config.costs);
       const costsStatistics = formatAsStatistics(groupDataPointsByHour(costs));
 
-      if (costs.length > 0) {
+      if (costsStatistics.length > 0) {
         await haClient.saveStatistics({
           prm: config.prm,
           name: config.name,
@@ -79,6 +79,8 @@ async function main() {
           stats: costsStatistics,
         });
       }
+    } else {
+      debug(`No cost configuration found for PRM ${config.prm}, skipping cost statistics initialization`);
     }
   }
 
@@ -134,6 +136,8 @@ async function main() {
           stats: incrementSums(costsStatistics, lastCostStatistic?.sum || 0),
         });
       }
+    } else {
+      debug(`No cost configuration found for PRM ${config.prm}, skipping cost statistics synchronization`);
     }
   }
 

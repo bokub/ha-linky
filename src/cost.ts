@@ -21,6 +21,10 @@ export function computeCosts(energy: DataPoint[], costConfigs: CostConfig[]): Da
     const intervalFrom = dayjs(result[0].date).format('DD/MM/YYYY');
     const intervalTo = dayjs(result[result.length - 1].date).format('DD/MM/YYYY');
     info(`Successfully computed the cost of ${result.length} data points from ${intervalFrom} to ${intervalTo}`);
+  } else {
+    info(
+      `No cost computed for the ${energy.length} points. No matching cost configuration found (out of ${costConfigs.length})`,
+    );
   }
 
   return result;
