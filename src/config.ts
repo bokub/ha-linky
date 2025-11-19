@@ -10,7 +10,8 @@ export type MeterConfig = {
 };
 
 export type CostConfig = {
-  price: number;
+  price?: number;
+  entity_id?: string;
   after?: string;
   before?: string;
   weekday?: Array<'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'>;
@@ -48,8 +49,18 @@ export function getUserConfig(): UserConfig {
           if (prmCostConfigs.length > 0) {
             resultMeter.costs = [];
             for (const cost of prmCostConfigs) {
-              if (cost.price && typeof cost.price === 'number') {
-                const resultCost: CostConfig = { price: cost.price };
+              // Validate that either price or entity_id is provided
+              const hasPrice = cost.price && typeof cost.price === 'number';
+              const hasEntityId = cost.entity_id && typeof cost.entity_id === 'string';
+
+              if (hasPrice || hasEntityId) {
+                const resultCost: CostConfig = {};
+                if (hasPrice) {
+                  resultCost.price = cost.price;
+                }
+                if (hasEntityId) {
+                  resultCost.entity_id = cost.entity_id;
+                }
                 if (cost.after && typeof cost.after === 'string') {
                   resultCost.after = cost.after;
                 }
