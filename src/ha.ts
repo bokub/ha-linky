@@ -180,4 +180,70 @@ export class HomeAssistantClient {
       statistic_ids: [statisticId, statisticIdWithCost],
     });
   }
+
+  public async getEntityState(entityId: string): Promise<{ state: string; unit: string | null } | null> {
+    try {
+      const response = await this.sendMessage({
+        type: 'get_states',
+      });
+
+      const entity = response.result.find((e: any) => e.entity_id === entityId);
+
+      if (!entity) {
+        return null;
+      }
+
+      const unit = entity.attributes?.unit_of_measurement || null;
+
+      return {
+        state: entity.state,
+        unit,
+      };
+    } catch (e) {
+      warn(`Failed to fetch state for entity ${entityId}: ${e.toString()}`);
+      return null;
+    }
+  }
+
+  public async getEntityHistory(args: {
+    entityId: string;
+    startTime: string;
+    endTime: string;
+  }): Promise<Array<{ timestamp: string; value: number; unit?: string }>> {
+    const { entityId, startTime, endTime } = args;
+
+    const response = await this.sendMessage({
+      type: 'history/history_during_period',
+      start_time: startTime,
+      end_time: endTime,
+      entity_ids: [entityId],
+      minimal_response: true,
+      no_attributes: true,
+    });
+
+    const history = response.result[entityId];
+    if (!history || !Array.isArray(history) || history.length === 0) {
+      return [];
+    }
+
+    const validEntries = history.filter(
+      (entry: any) => entry.s !== null && entry.s !== undefined && entry.s !== 'unavailable' && entry.s !== 'unknown',
+    );
+
+    const result = validEntries
+      .map((entry: any) => ({
+        timestamp: dayjs(entry.lu * 1000).toISOString(),
+        value: parseFloat(entry.s),
+      }))
+      .filter((entry) => !isNaN(entry.value));
+
+    // Get the entity's unit of measurement
+    const entityState = await this.getEntityState(entityId);
+    const unit = entityState?.unit || null;
+
+    // Add unit to all results
+    const resultWithUnit = result.map((entry) => ({ ...entry, unit }));
+
+    return resultWithUnit;
+  }
 }
