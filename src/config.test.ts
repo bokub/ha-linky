@@ -56,6 +56,7 @@ describe('getUserConfig', () => {
       ],
       "costs": [
         { "price": 0.1, "prm": "123" },
+        { "entity_id": "sensor.electricity_price", "prm": "123" },
         { "price": 0.2, "prm": "1234", "production": true },
         { "price": 0.3 },
         { "price": 0.4, "production": true }
@@ -69,7 +70,7 @@ describe('getUserConfig', () => {
           prm: '123',
           production: false,
           token: 'ccc',
-          costs: [{ price: 0.1 }, { price: 0.3 }],
+          costs: [{ price: 0.1 }, { entity_id: 'sensor.electricity_price' }, { price: 0.3 }],
         },
         {
           action: 'sync',
@@ -94,6 +95,68 @@ describe('getUserConfig', () => {
           production: true,
           token: 'pppp',
           costs: [{ price: 0.2 }, { price: 0.4 }],
+        },
+      ],
+    });
+  });
+
+  it('Throws if both price and entity_id are specified', () => {
+    vi.mocked(readFileSync).mockReturnValue(`{
+      "meters": [
+        { "prm": "123", "token": "ccc", "name": "Conso", "action": "sync" }
+      ],
+      "costs": [
+        { "price": 0.25, "entity_id": "sensor.electricity_price", "prm": "123" }
+      ]
+    }`);
+
+    expect(() => getUserConfig()).toThrowError(
+      "Cost configuration error for PRM 123: cannot specify both 'price' and 'entity_id' in the same configuration item. Please use either static pricing (price) or dynamic pricing (entity_id), but not both.",
+    );
+  });
+
+  const timeBasedFilters = [
+    { filter: 'after', value: '"08:00"', field: 'after' },
+    { filter: 'before', value: '"20:00"', field: 'before' },
+    { filter: 'weekday', value: '["mon", "tue"]', field: 'weekday' },
+  ];
+
+  for (const { filter, value, field } of timeBasedFilters) {
+    it(`Throws if entity_id is used with ${filter}`, () => {
+      vi.mocked(readFileSync).mockReturnValue(`{
+        "meters": [
+          { "prm": "123", "token": "ccc", "name": "Conso", "action": "sync" }
+        ],
+        "costs": [
+          { "entity_id": "sensor.electricity_price", "${field}": ${value}, "prm": "123" }
+        ]
+      }`);
+
+      expect(() => getUserConfig()).toThrowError(
+        "Cost configuration error for PRM 123: cannot use time-based filters ('after', 'before', 'weekday') with 'entity_id'",
+      );
+    });
+  }
+
+  it('Accepts entity_id with start_date and end_date', () => {
+    vi.mocked(readFileSync).mockReturnValue(`{
+      "meters": [
+        { "prm": "123", "token": "ccc", "name": "Conso", "action": "sync" }
+      ],
+      "costs": [
+        { "entity_id": "sensor.electricity_price", "start_date": "2024-01-01", "end_date": "2024-12-31", "prm": "123" }
+      ]
+    }`);
+
+    expect(getUserConfig()).toEqual({
+      meters: [
+        {
+          action: 'sync',
+          name: 'Conso',
+          prm: '123',
+          production: false,
+          token: 'ccc',
+          costs: [{ entity_id: 'sensor.electricity_price', start_date: '2024-01-01', end_date: '2024-12-31' }],
         },
       ],
     });

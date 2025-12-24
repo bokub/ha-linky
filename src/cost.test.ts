@@ -153,7 +153,7 @@ describe('Cost computer', () => {
     ]);
   });
 
-  it('Should handle entity history with time filters', () => {
+  it('Should handle multiple entity history sources without time filters', () => {
     const entityHistory: EntityHistoryData = {
       'sensor.peak_price': [
         { timestamp: '2024-01-01T00:00:00+01:00', value: 0.3 },
@@ -172,14 +172,14 @@ describe('Cost computer', () => {
         { date: '2024-01-01T10:00:00+01:00', value: 2000 },
         { date: '2024-01-01T22:00:00+01:00', value: 3000 },
       ],
-      [{ entity_id: 'sensor.peak_price', after: '08:00', before: '20:00' }, { entity_id: 'sensor.offpeak_price' }],
+      [{ entity_id: 'sensor.peak_price' }],
       entityHistory,
     );
 
     expect(result).toEqual([
-      { date: '2024-01-01T04:00:00+01:00', value: 0.1 }, // Off-peak: uses 0.1
-      { date: '2024-01-01T10:00:00+01:00', value: 0.8 }, // Peak: uses 0.4
-      { date: '2024-01-01T22:00:00+01:00', value: 0.36 }, // Off-peak: uses 0.12
+      { date: '2024-01-01T04:00:00+01:00', value: 0.3 }, // Uses peak price 0.3
+      { date: '2024-01-01T10:00:00+01:00', value: 0.8 }, // Uses peak price 0.4
+      { date: '2024-01-01T22:00:00+01:00', value: 0.9 }, // Uses peak price 0.3
     ]);
   });
 
