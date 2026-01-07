@@ -1,9 +1,11 @@
 name: CI/CD
 
 on:
-  - push
-  - pull_request
-  - workflow_dispatch
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   lint:
@@ -58,7 +60,7 @@ jobs:
         with:
           args: |
             --test \
-            --all \
+            --amd64 --aarch64 \
             --target . \
             --docker-hub ghcr.io/bokub
 
@@ -80,6 +82,6 @@ jobs:
       - uses: home-assistant/builder@master
         with:
           args: |
-            --all \
+            --amd64 --aarch64 \
             --target . \
             --docker-hub ghcr.io/bokub
