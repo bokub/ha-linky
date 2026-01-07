@@ -8,9 +8,6 @@ image: ghcr.io/bokub/ha-linky-{arch}
 arch:
   - aarch64
   - amd64
-  - armhf
-  - armv7
-  - i386
 homeassistant_api: true
 hassio_api: true
 map:
