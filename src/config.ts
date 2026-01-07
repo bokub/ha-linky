@@ -49,13 +49,18 @@ export function getUserConfig(): UserConfig {
           if (prmCostConfigs.length > 0) {
             resultMeter.costs = [];
             for (const cost of prmCostConfigs) {
-              // Validate that either price or entity_id is provided, but not both
               const hasPrice = cost.price && typeof cost.price === 'number';
               const hasEntityId = cost.entity_id && typeof cost.entity_id === 'string';
 
               if (hasPrice && hasEntityId) {
                 throw new Error(
-                  `Cost configuration error for PRM ${meter.prm}: cannot specify both 'price' and 'entity_id' in the same configuration item. Please use either static pricing (price) or dynamic pricing (entity_id), but not both.`,
+                  `Cost configuration error for PRM ${meter.prm}: cannot specify both 'price' and 'entity_id' in the same configuration item. Choose one or the other.`,
+                );
+              }
+
+              if (!hasPrice && !hasEntityId) {
+                throw new Error(
+                  `Cost configuration error for PRM ${meter.prm}: you must specify either 'price' or 'entity_id' in each cost configuration item.`,
                 );
               }
 
@@ -63,44 +68,42 @@ export function getUserConfig(): UserConfig {
               if (hasEntityId) {
                 if (cost.after || cost.before || cost.weekday) {
                   throw new Error(
-                    `Cost configuration error for PRM ${meter.prm}: cannot use time-based filters ('after', 'before', 'weekday') with 'entity_id'. Dynamic pricing entities already contain time-based price variations. Use separate configuration items with 'price' if you need time-based filtering.`,
+                    `Cost configuration error for PRM ${meter.prm}: cannot use time-based filters ('after', 'before', 'weekday') with 'entity_id'. Use separate configuration items with 'price' if you need time-based filtering.`,
                   );
                 }
               }
 
-              if (hasPrice || hasEntityId) {
-                const resultCost: CostConfig = {};
+              const resultCost: CostConfig = {};
 
-                // Add price or entity_id (mutually exclusive)
-                if (hasPrice) {
-                  resultCost.price = cost.price;
-                } else {
-                  resultCost.entity_id = cost.entity_id;
-                }
-
-                // Time-based filters only available with static pricing
-                if (hasPrice) {
-                  if (cost.after && typeof cost.after === 'string') {
-                    resultCost.after = cost.after;
-                  }
-                  if (cost.before && typeof cost.before === 'string') {
-                    resultCost.before = cost.before;
-                  }
-                  if (cost.weekday && Array.isArray(cost.weekday)) {
-                    resultCost.weekday = cost.weekday;
-                  }
-                }
-
-                // Date filters available for both modes
-                if (cost.start_date && typeof cost.start_date === 'string') {
-                  resultCost.start_date = cost.start_date;
-                }
-                if (cost.end_date && typeof cost.end_date === 'string') {
-                  resultCost.end_date = cost.end_date;
-                }
-
-                resultMeter.costs.push(resultCost);
+              // Add price or entity_id (mutually exclusive)
+              if (hasPrice) {
+                resultCost.price = cost.price;
+              } else {
+                resultCost.entity_id = cost.entity_id;
               }
+
+              // Time-based filters only available with static pricing
+              if (hasPrice) {
+                if (cost.after && typeof cost.after === 'string') {
+                  resultCost.after = cost.after;
+                }
+                if (cost.before && typeof cost.before === 'string') {
+                  resultCost.before = cost.before;
+                }
+                if (cost.weekday && Array.isArray(cost.weekday)) {
+                  resultCost.weekday = cost.weekday;
+                }
+              }
+
+              // Date filters available for both modes
+              if (cost.start_date && typeof cost.start_date === 'string') {
+                resultCost.start_date = cost.start_date;
+              }
+              if (cost.end_date && typeof cost.end_date === 'string') {
+                resultCost.end_date = cost.end_date;
+              }
+
+              resultMeter.costs.push(resultCost);
             }
           }
         }

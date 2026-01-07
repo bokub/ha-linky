@@ -111,7 +111,22 @@ describe('getUserConfig', () => {
     }`);
 
     expect(() => getUserConfig()).toThrowError(
-      "Cost configuration error for PRM 123: cannot specify both 'price' and 'entity_id' in the same configuration item. Please use either static pricing (price) or dynamic pricing (entity_id), but not both.",
+      "Cost configuration error for PRM 123: cannot specify both 'price' and 'entity_id' in the same configuration item. Choose one or the other.",
+    );
+  });
+
+  it('Throws if no price and no entity_id are found', () => {
+    vi.mocked(readFileSync).mockReturnValue(`{
+      "meters": [
+        { "prm": "123", "token": "ccc", "name": "Conso", "action": "sync" }
+      ],
+      "costs": [
+        { "prm": "123" }
+      ]
+    }`);
+
+    expect(() => getUserConfig()).toThrowError(
+      "Cost configuration error for PRM 123: you must specify either 'price' or 'entity_id' in each cost configuration item.",
     );
   });
 

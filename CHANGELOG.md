@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.0 - 7 janvier 2026
+
+- Possibilité de calculer les coûts en se basant sur une entité Home Assistant contenant le prix de l'énergie (ex : `sensor.electricity_price`) - merci à [@vinzd](https://github.com/vinzd) !
+
 ## 1.6.1 - 28 octobre 2025
 
 - Ajout de logs pour mieux comprendre les problèmes de calcul des coûts
@@ -31,4 +35,4 @@
 
 ## 1.2.0 - 15 novembre 2023
 
-- Ajout de la synchronisation de la production d'énergie - merci à @cddu33 pour son aide !
+- Ajout de la synchronisation de la production d'énergie - merci à [@cddu33](https://github.com/cddu33) pour son aide !
