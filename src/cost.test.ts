@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeCosts } from './cost.js';
+import { computeCosts, EntityHistoryData } from './cost.js';
 import { formatAsStatistics, groupDataPointsByHour } from './format';
 
 describe('Cost computer', () => {
@@ -124,6 +124,179 @@ describe('Cost computer', () => {
       { date: '2024-01-01T02:30:00+01:00', value: Math.round(0.3 * 4000) / 1000 },
       { date: '2024-01-01T03:00:00+01:00', value: Math.round(0.3 * 5000) / 1000 },
       { date: '2024-01-01T03:30:00+01:00', value: Math.round(0.3 * 6000) / 1000 },
+    ]);
+  });
+
+  it('Should compute costs using entity history', () => {
+    const entityHistory: EntityHistoryData = {
+      'sensor.electricity_price': [
+        { timestamp: '2024-01-01T00:00:00+01:00', value: 0.1 },
+        { timestamp: '2024-01-01T12:00:00+01:00', value: 0.2 },
+        { timestamp: '2024-01-02T00:00:00+01:00', value: 0.15 },
+      ],
+    };
+
+    const result = computeCosts(
+      [
+        { date: '2024-01-01T06:00:00+01:00', value: 1000 },
+        { date: '2024-01-01T14:00:00+01:00', value: 2000 },
+        { date: '2024-01-02T06:00:00+01:00', value: 3000 },
+      ],
+      [{ entity_id: 'sensor.electricity_price' }],
+      entityHistory,
+    );
+
+    expect(result).toEqual([
+      { date: '2024-01-01T06:00:00+01:00', value: 0.1 }, // Uses 0.1 (price at 00:00)
+      { date: '2024-01-01T14:00:00+01:00', value: 0.4 }, // Uses 0.2 (price at 12:00)
+      { date: '2024-01-02T06:00:00+01:00', value: 0.45 }, // Uses 0.15 (price at 00:00)
+    ]);
+  });
+
+  it('Should handle multiple entity history sources without time filters', () => {
+    const entityHistory: EntityHistoryData = {
+      'sensor.peak_price': [
+        { timestamp: '2024-01-01T00:00:00+01:00', value: 0.3 },
+        { timestamp: '2024-01-01T08:00:00+01:00', value: 0.4 },
+        { timestamp: '2024-01-01T20:00:00+01:00', value: 0.3 },
+      ],
+      'sensor.offpeak_price': [
+        { timestamp: '2024-01-01T00:00:00+01:00', value: 0.1 },
+        { timestamp: '2024-01-01T06:00:00+01:00', value: 0.12 },
+      ],
+    };
+
+    const result = computeCosts(
+      [
+        { date: '2024-01-01T04:00:00+01:00', value: 1000 },
+        { date: '2024-01-01T10:00:00+01:00', value: 2000 },
+        { date: '2024-01-01T22:00:00+01:00', value: 3000 },
+      ],
+      [{ entity_id: 'sensor.peak_price' }],
+      entityHistory,
+    );
+
+    expect(result).toEqual([
+      { date: '2024-01-01T04:00:00+01:00', value: 0.3 }, // Uses peak price 0.3
+      { date: '2024-01-01T10:00:00+01:00', value: 0.8 }, // Uses peak price 0.4
+      { date: '2024-01-01T22:00:00+01:00', value: 0.9 }, // Uses peak price 0.3
+    ]);
+  });
+
+  it('Should skip data points without matching entity history', () => {
+    const entityHistory: EntityHistoryData = {
+      'sensor.electricity_price': [{ timestamp: '2024-01-01T12:00:00+01:00', value: 0.2 }],
+    };
+
+    const result = computeCosts(
+      [
+        { date: '2024-01-01T06:00:00+01:00', value: 1000 }, // Before any price data
+        { date: '2024-01-01T14:00:00+01:00', value: 2000 }, // After price data
+      ],
+      [{ entity_id: 'sensor.electricity_price' }],
+      entityHistory,
+    );
+
+    expect(result).toEqual([
+      { date: '2024-01-01T14:00:00+01:00', value: 0.4 }, // Only this one has price
+    ]);
+  });
+
+  it('Should fallback to static price when entity_id not in history', () => {
+    const entityHistory: EntityHistoryData = {};
+
+    const result = computeCosts(
+      [
+        { date: '2024-01-01T06:00:00+01:00', value: 1000 },
+        { date: '2024-01-01T14:00:00+01:00', value: 2000 },
+      ],
+      [{ price: 0.25 }],
+      entityHistory,
+    );
+
+    expect(result).toEqual([
+      { date: '2024-01-01T06:00:00+01:00', value: 0.25 },
+      { date: '2024-01-01T14:00:00+01:00', value: 0.5 },
+    ]);
+  });
+
+  it('Should combine static and entity-based pricing', () => {
+    const entityHistory: EntityHistoryData = {
+      'sensor.electricity_price': [{ timestamp: '2024-01-01T00:00:00+01:00', value: 0.2 }],
+    };
+
+    const result = computeCosts(
+      [
+        { date: '2024-01-01T06:00:00+01:00', value: 1000 },
+        { date: '2024-01-01T14:00:00+01:00', value: 2000 },
+      ],
+      [
+        { entity_id: 'sensor.electricity_price', before: '12:00' },
+        { price: 0.3, after: '12:00' },
+      ],
+      entityHistory,
+    );
+
+    expect(result).toEqual([
+      { date: '2024-01-01T06:00:00+01:00', value: 0.2 }, // Entity-based
+      { date: '2024-01-01T14:00:00+01:00', value: 0.6 }, // Static price
+    ]);
+  });
+
+  it('Should convert cents to euros automatically', () => {
+    const entityHistory: EntityHistoryData = {
+      'sensor.electricity_price_cents': [
+        { timestamp: '2024-01-01T00:00:00+01:00', value: 20, unit: 'c€/kWh' }, // 20 cents = 0.20 euros
+        { timestamp: '2024-01-01T12:00:00+01:00', value: 25, unit: 'c€/kWh' }, // 25 cents = 0.25 euros
+      ],
+    };
+
+    const result = computeCosts(
+      [
+        { date: '2024-01-01T06:00:00+01:00', value: 1000 },
+        { date: '2024-01-01T14:00:00+01:00', value: 2000 },
+      ],
+      [{ entity_id: 'sensor.electricity_price_cents' }],
+      entityHistory,
+    );
+
+    expect(result).toEqual([
+      { date: '2024-01-01T06:00:00+01:00', value: 0.2 }, // 20 cents * 1000 Wh / 100 / 1000 = 0.2 €
+      { date: '2024-01-01T14:00:00+01:00', value: 0.5 }, // 25 cents * 2000 Wh / 100 / 1000 = 0.5 €
+    ]);
+  });
+
+  it('Should handle EUR/MWh unit', () => {
+    const entityHistory: EntityHistoryData = {
+      'sensor.spot_price': [
+        { timestamp: '2024-01-01T00:00:00+01:00', value: 200, unit: 'EUR/MWh' }, // 200 EUR/MWh = 0.2 €/kWh
+      ],
+    };
+
+    const result = computeCosts(
+      [{ date: '2024-01-01T06:00:00+01:00', value: 1000 }],
+      [{ entity_id: 'sensor.spot_price' }],
+      entityHistory,
+    );
+
+    expect(result).toEqual([
+      { date: '2024-01-01T06:00:00+01:00', value: 0.2 }, // 200 EUR/MWh * 1000 Wh / 1000 / 1000 = 0.2 €
+    ]);
+  });
+
+  it('Should handle price without unit (assume €/kWh)', () => {
+    const entityHistory: EntityHistoryData = {
+      'sensor.price_no_unit': [{ timestamp: '2024-01-01T00:00:00+01:00', value: 0.25 }],
+    };
+
+    const result = computeCosts(
+      [{ date: '2024-01-01T06:00:00+01:00', value: 1000 }],
+      [{ entity_id: 'sensor.price_no_unit' }],
+      entityHistory,
+    );
+
+    expect(result).toEqual([
+      { date: '2024-01-01T06:00:00+01:00', value: 0.25 }, // Assume €/kWh
     ]);
   });
 });

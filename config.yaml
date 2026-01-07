@@ -36,7 +36,8 @@ schema:
       action: list(sync|reset)
       production: bool?
   costs:
-    - price: float
+    - price: float?
+      entity_id: str?
       prm: str?
       production: bool?
       after: str?

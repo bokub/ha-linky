@@ -159,18 +159,32 @@ La marche à suivre est la suivante :
 
 La configuration des tarifs est optionnelle, et s'écrit dans l'encadré `costs` de l'onglet _Configuration_, sous forme de liste de tarifs
 
+#### Types de tarification
+
+HA Linky supporte deux modes de tarification :
+
+- **Tarification statique** : prix fixe configuré avec le paramètre `price`
+- **Tarification dynamique** : prix variable basé sur une entité Home Assistant avec le paramètre `entity_id`
+
+**Important** : Les paramètres `price` et `entity_id` sont **mutuellement exclusifs**. Vous ne pouvez pas spécifier les deux dans le même item de configuration. Si vous avez besoin de combiner les deux modes, créez des items séparés avec des filtres horaires/temporels appropriés.
+
+**Note** : Les filtres horaires (`after`, `before`, `weekday`) ne peuvent **pas** être utilisés avec `entity_id`, car les entités de tarification dynamique contiennent déjà les variations de prix dans le temps. Seuls les filtres de dates (`start_date`, `end_date`) sont compatibles avec `entity_id`.
+
 Chaque item de la liste peut recevoir les paramètres suivants :
 
-| Paramètre    | Description                                                                                                                | Optionnel |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------- | --------- |
-| `price`      | Coût du kWh en €                                                                                                           | **Non**   |
-| `prm`        | Numéro de PRM. Si non renseigné, tous les PRMs en consommation/production (selon le paramètre d'en dessous) sont concernés | Oui       |
-| `production` | Si égal à `true`, le tarif sera appliqué à de la production, il s'agira donc techniquement d'un gain plutôt qu'un coût     | Oui       |
-| `after`      | Heure à partir de laquelle ce tarif est valable, au format _"HH:00"_                                                       | Oui       |
-| `before`     | Heure à partir de laquelle ce tarif n'est plus valable, au format _"HH:00"_                                                | Oui       |
-| `weekday`    | Jours de la semaine pour lesquels ce tarif est valabe (voir exemple ci-dessous)                                            | Oui       |
-| `start_date` | Date à partir de laquelle ce tarif est valable, au format _"YYYY-MM-DD"_                                                   | Oui       |
-| `end_date`   | Date à partir de laquelle ce tarif n'est plus valable, au format _"YYYY-MM-DD"_                                            | Oui       |
+| Paramètre    | Description                                                                                                                | Optionnel | Compatible avec `entity_id` |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------- | --------- | --------------------------- |
+| `price`      | Coût du kWh en € (tarification statique)                                                                                   | Oui\*     | N/A                         |
+| `entity_id`  | Identifiant d'une entité Home Assistant pour une tarification dynamique (ex. `sensor.electricity_price`)                   | Oui\*     | N/A                         |
+| `prm`        | Numéro de PRM. Si non renseigné, tous les PRMs en consommation/production (selon le paramètre d'en dessous) sont concernés | Oui       | ✓                           |
+| `production` | Si égal à `true`, le tarif sera appliqué à de la production, il s'agira donc techniquement d'un gain plutôt qu'un coût     | Oui       | ✓                           |
+| `after`      | Heure à partir de laquelle ce tarif est valable, au format _"HH:00"_                                                       | Oui       | ✗                           |
+| `before`     | Heure à partir de laquelle ce tarif n'est plus valable, au format _"HH:00"_                                                | Oui       | ✗                           |
+| `weekday`    | Jours de la semaine pour lesquels ce tarif est valabe (voir exemple ci-dessous)                                            | Oui       | ✗                           |
+| `start_date` | Date à partir de laquelle ce tarif est valable, au format _"YYYY-MM-DD"_                                                   | Oui       | ✓                           |
+| `end_date`   | Date à partir de laquelle ce tarif n'est plus valable, au format _"YYYY-MM-DD"_                                            | Oui       | ✓                           |
+
+_\*Exactement un des deux paramètres `price` ou `entity_id` doit être renseigné (les deux ne peuvent pas être utilisés simultanément dans le même item)_
 
 #### Exemples
 
@@ -228,12 +242,50 @@ Tarif qui évolue au cours du temps : `0,21 € / kWh` jusqu'au 30 juin inclus, 
   start_date: '2024-09-01'
 ```
 
+#### Exemples avec tarification dynamique
+
+Configuration avec une entité de prix spot (par exemple depuis rte-tempo) :
+
+```yaml
+- entity_id: sensor.electricity_price
+```
+
+Configuration avec limitation de dates pour une période spécifique :
+
+```yaml
+- entity_id: sensor.electricity_price_winter
+  start_date: '2024-11-01'
+  end_date: '2025-03-31'
+- entity_id: sensor.electricity_price_summer
+  start_date: '2024-04-01'
+  end_date: '2024-10-31'
+```
+
+Configuration mixte : prix dynamique en heures pleines, prix fixe en heures creuses
+
+```yaml
+- price: 0.25
+  after: '06:00'
+  before: '22:00'
+- price: 0.15
+```
+
+**Note sur les unités** : HA Linky convertit automatiquement les unités de prix des entités :
+
+- `c€/kWh`, `cent/kWh` → divisé par 100 pour conversion en €/kWh
+- `EUR/MWh`, `€/MWh` → divisé par 1000 pour conversion en €/kWh
+- `€/kWh`, `EUR/kWh` ou pas d'unité → utilisé tel quel
+
 #### Notes concernant le calcul des coûts
 
 - Les coûts sont calculés au moment où la consommation est importée dans Home Assistant. Le coût des des consommations déjà importées ne sera pas recalculé, sauf si vous faites une remise à zéro
 - Si vous avez déjà importé toutes vos données de consommation au moment de la mise en place de la configuration des coûts, **il faudra attendre le prochain import** (le lendemain) ou **faire une remise à zéro** pour que l'entité dédiée aux coûts apparaisse dans votre tableau de bord Énergie
 - L'ajout des coûts au tableau de bord Énergie s'effectue en choisissant _Utiliser une entité de suivi des coûts totaux_ dans la fenêtre de configuration de la consommation
-- Vous pouvez combiner **tous** les paramètres (horaires, jours de la semaine, dates, prm), pour personnaliser au maximum le calcul des coûts
+- Vous pouvez combiner **tous** les paramètres (horaires, jours de la semaine, dates, prm) avec la tarification **statique** (`price`), pour personnaliser au maximum le calcul des coûts
+- Avec `entity_id`, HA Linky récupère l'historique des prix de l'entité et applique le prix le plus récent au moment de chaque mesure de consommation
+- La tarification statique (`price`) et dynamique (`entity_id`) peuvent être combinées dans différents items de configuration
+- **Important** : Un même item de configuration ne peut pas contenir à la fois `price` et `entity_id`. Ces deux paramètres sont mutuellement exclusifs
+- **Important** : Les filtres horaires (`after`, `before`, `weekday`) ne peuvent pas être utilisés avec `entity_id`. Seuls les filtres de dates (`start_date`, `end_date`) sont compatibles avec la tarification dynamique
 - La configuration des horaires ne fonctionne que pour les heures pile et les demi-heures, autrement dit, les minutes différentes de `:00` et `:30` pourraient créer des valeurs inattendues
 - Si plusieurs items de la liste sont valides au même moment (chevauchement d'horaires ou de dates par exemple), HA Linky choisira l'item le plus haut placé dans la liste
 - Assurez-vous d'entourer les heures et les dates par des guillemets doubles `"` ou simples `'` pour être certain que celles-ci soient bien interprétées par HA Linky

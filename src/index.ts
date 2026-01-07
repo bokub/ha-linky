@@ -2,8 +2,8 @@ import { HomeAssistantClient } from './ha.js';
 import { LinkyClient } from './linky.js';
 import { getUserConfig, MeterConfig } from './config.js';
 import { getMeterHistory } from './history.js';
-import { formatAsStatistics, groupDataPointsByHour, incrementSums } from './format.js';
-import { computeCosts } from './cost.js';
+import { formatAsStatistics, groupDataPointsByHour, incrementSums, DataPoint } from './format.js';
+import { computeCosts, EntityHistoryData } from './cost.js';
 import { debug, error, info, warn } from './log.js';
 import cron from 'node-cron';
 import dayjs from 'dayjs';
@@ -67,7 +67,8 @@ async function main() {
     });
 
     if (config.costs) {
-      const costs = computeCosts(energyData, config.costs);
+      const entityHistory = await fetchEntityHistory(haClient, config.costs, energyData);
+      const costs = computeCosts(energyData, config.costs, entityHistory);
       const costsStatistics = formatAsStatistics(groupDataPointsByHour(costs));
 
       if (costsStatistics.length > 0) {
@@ -79,8 +80,6 @@ async function main() {
           stats: costsStatistics,
         });
       }
-    } else {
-      debug(`No cost configuration found for PRM ${config.prm}, skipping cost statistics initialization`);
     }
   }
 
@@ -119,7 +118,8 @@ async function main() {
     });
 
     if (config.costs) {
-      const costs = computeCosts(energyData, config.costs);
+      const entityHistory = await fetchEntityHistory(haClient, config.costs, energyData);
+      const costs = computeCosts(energyData, config.costs, entityHistory);
       const costsStatistics = formatAsStatistics(groupDataPointsByHour(costs));
 
       if (costsStatistics.length > 0) {
@@ -136,9 +136,48 @@ async function main() {
           stats: incrementSums(costsStatistics, lastCostStatistic?.sum || 0),
         });
       }
-    } else {
-      debug(`No cost configuration found for PRM ${config.prm}, skipping cost statistics synchronization`);
     }
+  }
+
+  async function fetchEntityHistory(
+    haClient: HomeAssistantClient,
+    costConfigs: MeterConfig['costs'],
+    energyData: DataPoint[],
+  ): Promise<EntityHistoryData | undefined> {
+    if (!costConfigs || costConfigs.length === 0) {
+      return undefined;
+    }
+
+    // Extract unique entity IDs from cost configs
+    const entityIds = [...new Set(costConfigs.filter((c) => c.entity_id).map((c) => c.entity_id!))];
+
+    if (entityIds.length === 0) {
+      return undefined;
+    }
+
+    // Determine time range from energy data
+    const startTime = dayjs(energyData[0].date).subtract(1, 'day').toISOString();
+    const endTime = dayjs(energyData[energyData.length - 1].date)
+      .add(1, 'day')
+      .toISOString();
+
+    const entityHistory: EntityHistoryData = {};
+
+    for (const entityId of entityIds) {
+      try {
+        const history = await haClient.getEntityHistory({
+          entityId,
+          startTime,
+          endTime,
+        });
+        entityHistory[entityId] = history;
+      } catch (e) {
+        warn(`Failed to fetch history for entity ${entityId}: ${e.toString()}`);
+        entityHistory[entityId] = [];
+      }
+    }
+
+    return entityHistory;
   }
 
   // Initialize or sync data
