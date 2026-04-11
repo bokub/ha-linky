@@ -1,3 +1,11 @@
 node_modules
 npm-debug.log
+Dockerfile
+standalone.Dockerfile
+.git
+.gitignore
 dist
+.vscode
+.env
+coverage
+.DS_Store
