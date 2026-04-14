@@ -1,17 +1,17 @@
-# Home Assistant Linky Add-on
+# Home Assistant Linky App
 
 [![Build Status](https://flat.badgen.net/github/checks/bokub/ha-linky?label=build)](https://github.com/bokub/ha-linky/actions/workflows/run.yml?query=branch%3Amaster)
 [![Coverage](https://img.shields.io/codecov/c/github/bokub/ha-linky?style=flat-square)](https://app.codecov.io/github/bokub/ha-linky)
 [![Version](https://gradgen.bokub.workers.dev/github/release/bokub/ha-linky?gradient=b65cff,11cbfa&style=flat&label=version)](https://github.com/bokub/ha-linky/releases)
 [![Code style](https://flat.badgen.net/badge/code%20style/prettier/ff69b4)](https://github.com/bokub/prettier-config)
 
-> A **Home Assistant** add-on to sync Energy dashboards with your **Linky** smart meter
+> A **Home Assistant** app to sync Energy dashboards with your **Linky** smart meter
 
 **N.B**: Because this tool is targeted for French users, the documentation is...in French!
 
 ---
 
-**HA Linky** est un add-on pour Home Assistant permettant de synchroniser les données votre compteur Linky avec les tableaux de bord d'énergie de Home Assistant.
+**HA Linky** est une app pour Home Assistant (anciennement appelée _add-on_ ou _module complémentaire_) permettant de synchroniser les données votre compteur Linky avec les tableaux de bord d'énergie de Home Assistant.
 
 Il utilise mon module npm [linky](https://github.com/bokub/linky) et mon service [Conso API](https://conso.boris.sh/) pour communiquer avec Enedis et récupérer votre consommation.
 
@@ -21,7 +21,7 @@ Il utilise mon module npm [linky](https://github.com/bokub/linky) et mon service
 
 ## Prérequis
 
-Pour utiliser cet add-on, il vous faut :
+Pour utiliser cette app, il vous faut :
 
 - Un compteur Linky
 - Un espace client Enedis
@@ -31,17 +31,17 @@ Pour utiliser cet add-on, il vous faut :
 ## Installation
 
 - Cliquez [ici](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fbokub%2Fha-linky) pour ajouter le repository à Home Assistant. Si le lien ne fonctionne pas :
-  - Depuis Home Assistant, ouvrez le menu _Paramètres_ / _Settings_, puis _Modules complémentaires_ / _Add-ons_
+  - Depuis Home Assistant, ouvrez le menu _Paramètres_ / _Settings_, puis _Apps_
   - Cliquez sur le bouton _Boutique_ / _Store_ en bas à droite
   - Cliquer sur les trois points en haut à droite, puis _Dépôts_ / _Repositories_
   - Ajoutez `https://github.com/bokub/ha-linky`
 - Cliquez sur _Ajouter_ / _Add_ puis fermez la boite de dialogue
-- Cherchez _Linky_ dans la liste des add-ons et cliquez dessus (vous pouvez utiliser la barre de recherche)
-- Installez l'add-on en cliquant sur le bouton dédié
+- Cherchez _Linky_ dans la liste des apps et cliquez dessus (vous pouvez utiliser la barre de recherche)
+- Installez l'app en cliquant sur le bouton dédié
 
 ## Configuration
 
-Une fois l'add-on installé, rendez-vous dans l'onglet _Configuration_, cliquez sur les 3 points, puis _Modifier en YAML_ / _Edit in YAML_
+Une fois l'app installée, rendez-vous dans l'onglet _Configuration_, cliquez sur les 3 points, puis _Modifier en YAML_ / _Edit in YAML_
 
 La configuration YAML de base comporte 2 compteurs dans la liste `meters` :
 
@@ -54,7 +54,7 @@ Pour chaque compteur, remplissez les champs suivants :
 
 - `prm` : Votre numéro de PRM (14 chiffres).
   - Si vous ne le connaissez pas, entrez votre token sur [la page exemples](https://conso.boris.sh/exemples) de Conso API et le PRM s'affichera dans le champ _PRM_
-  - Vous pouvez également le trouver sur votre compteur en appuyant sur la touche **+** jusqu’à lire la valeur du _numéro de PRM_.
+  - Vous pouvez également le trouver sur votre compteur en appuyant sur la touche **+** jusqu'à lire la valeur du _numéro de PRM_.
   - Selon les cas, le PRM de consommation peut être identique ou différent de celui qui gère la production.
   - Les 14 chiffres du PRM doivent être saisis entre guillemets `"`, comme dans l'exemple ci-dessous
 - `token` : Votre token **Conso API**
@@ -88,7 +88,7 @@ Pour chaque compteur, remplissez les champs suivants :
   production: true
 ```
 
-Appliquez les modifications et démarrez / redémarrez l'add-on si ce n'est pas déjà fait
+Appliquez les modifications et démarrez / redémarrez l'app si ce n'est pas déjà fait
 
 _**N.B:** Home Assistant va automatiquement ajouter des retours à la ligne avec le caractère `>-`. Pas de panique, c'est normal._
 
@@ -99,7 +99,7 @@ token: >-
 
 ## Utilisation / fonctionnement
 
-Une fois l'add-on démarré, rendez-vous dans l'onglet _Journal_ / _Log_ pour suivre la progression de la synchronisation.
+Une fois l'app démarrée, rendez-vous dans l'onglet _Journal_ / _Log_ pour suivre la progression de la synchronisation.
 
 Au premier lancement, **HA Linky** essaiera de récupérer jusqu'à **1 an** de données historiques (sauf si vous fournissez votre propre export CSV).
 
@@ -108,7 +108,7 @@ Ensuite, il synchronisera les données deux fois par jour tant qu'il n'est pas a
 - Une fois entre 6h et 7h du matin pour récupérer les données de la veille
 - Une fois entre 9h et 10h du matin au cas où la première synchronisation a échoué
 
-Vous pourrez vérifier le bon fonctionnement de l'add-on en vous rendant dans l'onglet _Journal_ / _Log_, où toutes les informations utiles seront affichées.
+Vous pourrez vérifier le bon fonctionnement de l'app en vous rendant dans l'onglet _Journal_ / _Log_, où toutes les informations utiles seront affichées.
 
 ### Tableaux de bord
 
@@ -122,7 +122,7 @@ Pour visualiser les données de **HA Linky** dans vos tableaux de bord d'énergi
 
 ### Bon à savoir
 
-- Les données d’une journée ne sont pas accessibles en temps réel, il faut attendre **le lendemain de leur mesure** pour pouvoir les récupérer, entre 6h et 10h.
+- Les données d'une journée ne sont pas accessibles en temps réel, il faut attendre **le lendemain de leur mesure** pour pouvoir les récupérer, entre 6h et 10h.
 - Pour les dates récentes (moins de 7 jours), **HA Linky** essaiera de récupérer en priorité des données par demi-heure
 - Pour les dates plus anciennes, **HA Linky** récupèrera seulement des données quotidiennes. Vous verrez alors une seule grande barre entre 0h et 1h du matin sur votre tableau de bord d'énergie si vous affichez le graphique détaillé d'une telle journée.
 
@@ -130,7 +130,7 @@ Pour visualiser les données de **HA Linky** dans vos tableaux de bord d'énergi
 
 En cas de problème, il est toujours possible d'effacer toutes les données de consommation ou de production créées par **HA Linky**
 
-Revenez sur l'onglet _Configuration_ de l'add-on et changez la valeur de `action` à `reset` sur le compteur qui vous intéresse, puis appliquez les modifications et redémarrez l'add-on.
+Revenez sur l'onglet _Configuration_ de l'app et changez la valeur de `action` à `reset` sur le compteur qui vous intéresse, puis appliquez les modifications et redémarrez l'app.
 
 Ouvrez ensuite l'onglet _Journal_ / _Log_ pour vérifier que la remise à zéro s'est bien déroulée.
 
@@ -149,7 +149,7 @@ La marche à suivre est la suivante :
 - Téléchargez un export de vos données **horaires** depuis votre espace client Enedis ([tutoriel](https://github.com/bokub/ha-linky/wiki/T%C3%A9l%C3%A9charger-son-historique-au-format-CSV))
 - Déposez ce fichier dans le dossier `/addon_configs/cf6b56a3_linky` ([tutoriel](https://github.com/bokub/ha-linky/wiki/Importer-un-fichier-CSV-dans-Home-Assistant))
 - Si vous avez déjà importé des données dans Home Assistant, faites une remise à zéro en suivant le paragraphe précédent
-- Repassez l'action du compteur à `sync` et redémarrez l'add-on
+- Repassez l'action du compteur à `sync` et redémarrez l'app
 - Si un fichier CSV correspondant à votre PRM est trouvé, HA Linky l'utilisera pour initialiser les données au lieu d'appeler l'API.
 - En cas de gros import, il faudra peut-être attendre une ou deux minutes pour voir les statistiques apparaître dans la configuration du tableau de bord d'énergie
 
@@ -273,10 +273,10 @@ Utilisation d'entités différentes selon la période de l'année :
 
 ## Installation standalone
 
-Si votre installation de Home Assistant ne vous permet pas d'accéder au système d'add-ons, il est également possible de lancer HA Linky en utilisant Docker
+Si votre installation de Home Assistant ne vous permet pas d'accéder au système d'apps, il est également possible de lancer HA Linky en utilisant Docker
 
 > [!NOTE]
-> Cette méthode n'est pas recommandée et fait office de solution de **dépannage** pour les personnes ne voulant pas utiliser HAOS et son système d'add-ons.
+> Cette méthode n'est pas recommandée et fait office de solution de **dépannage** pour les personnes ne voulant pas utiliser HAOS et son système d'apps.
 >
 > Vous avez choisi d'installer Home Assistant avec une méthode "avancée", vous devriez donc maitriser vos outils.
 > Je ne fournis **pas d'aide** concernant l'utilisation de Docker, Kubernetes, ou tout système autre que HAOS.
