@@ -2,11 +2,24 @@ import { HomeAssistantClient } from './ha.js';
 import { LinkyClient } from './linky.js';
 import { getUserConfig, MeterConfig } from './config.js';
 import { getMeterHistory } from './history.js';
-import { formatAsStatistics, groupDataPointsByHour, incrementSums, DataPoint } from './format.js';
+import {
+  formatAsStatistics,
+  groupDataPointsByHour,
+  incrementSums,
+  asDataPoints,
+  coverExistingHours,
+  findFirstDayToReimport,
+  mergeByDay,
+  sumBefore,
+  DataPoint,
+} from './format.js';
 import { computeCosts, EntityHistoryData } from './cost.js';
 import { debug, error, info, warn } from './log.js';
 import cron from 'node-cron';
 import dayjs from 'dayjs';
+
+const GAP_WINDOW_DAYS = 30;
+const UPGRADE_WINDOW_DAYS = 7;
 
 async function main() {
   debug('HA Linky is starting');
@@ -90,23 +103,47 @@ async function main() {
       } data`,
     );
 
-    const lastStatistic = await haClient.findLastStatistic({
+    const statistics = await haClient.getHourlyStatistics({
       prm: config.prm,
       isProduction: config.production,
+      days: GAP_WINDOW_DAYS,
     });
+    const lastStatistic = statistics[statistics.length - 1];
     if (!lastStatistic) {
       warn(`Data synchronization failed, no previous statistic found in Home Assistant`);
       return;
     }
 
-    const isSyncingNeeded = dayjs(lastStatistic.start).isBefore(dayjs().subtract(2, 'days')) && dayjs().hour() >= 6;
+    const lastDay = dayjs(lastStatistic.start).startOf('day');
+    const incompleteDay = findFirstDayToReimport(statistics, dayjs().subtract(UPGRADE_WINDOW_DAYS, 'days'));
+    const isSyncingNeeded = !!incompleteDay || (lastDay.isBefore(dayjs().subtract(2, 'days')) && dayjs().hour() >= 6);
     if (!isSyncingNeeded) {
       debug('Everything is up-to-date, nothing to synchronize');
       return;
     }
+
+    // Statistic sums are cumulative, so re-importing a past day means re-importing everything after it
+    const firstDay = incompleteDay ?? lastDay.add(1, 'day');
+    if (incompleteDay) {
+      info(`Incomplete data detected on ${incompleteDay.format('DD/MM/YYYY')}, re-importing from that day`);
+    }
+
     const client = new LinkyClient(config.token, config.prm, config.production);
-    const firstDay = dayjs(lastStatistic.start).add(1, 'day');
-    const energyData = await client.getEnergyData(firstDay);
+    let energyData = await client.getEnergyData(firstDay);
+
+    if (incompleteDay) {
+      const fetchedDay = energyData.filter((point) => dayjs(point.date).isSame(incompleteDay, 'day'));
+      if (fetchedDay.every((point) => !point.value)) {
+        warn(`Enedis has no data at all for ${incompleteDay.format('DD/MM/YYYY')}, this day cannot be recovered yet`);
+      } else if (fetchedDay.length === 1) {
+        debug(
+          `Only the daily total is available for ${incompleteDay.format('DD/MM/YYYY')}, hourly detail may never come`,
+        );
+      }
+
+      const existing = asDataPoints(statistics.filter((point) => !dayjs(point.start).isBefore(firstDay)));
+      energyData = coverExistingHours(mergeByDay(existing, energyData), existing);
+    }
 
     const energyStatistics = formatAsStatistics(groupDataPointsByHour(energyData));
 
@@ -114,7 +151,7 @@ async function main() {
       prm: config.prm,
       name: config.name,
       isProduction: config.production,
-      stats: incrementSums(energyStatistics, lastStatistic.sum),
+      stats: incrementSums(energyStatistics, sumBefore(statistics, firstDay)),
     });
 
     if (config.costs) {
@@ -123,17 +160,18 @@ async function main() {
       const costsStatistics = formatAsStatistics(groupDataPointsByHour(costs));
 
       if (costsStatistics.length > 0) {
-        const lastCostStatistic = await haClient.findLastStatistic({
+        const costStatistics = await haClient.getHourlyStatistics({
           prm: config.prm,
           isProduction: config.production,
           isCost: true,
+          days: GAP_WINDOW_DAYS,
         });
         await haClient.saveStatistics({
           prm: config.prm,
           name: config.name,
           isProduction: config.production,
           isCost: true,
-          stats: incrementSums(costsStatistics, lastCostStatistic?.sum || 0),
+          stats: incrementSums(costsStatistics, sumBefore(costStatistics, firstDay)),
         });
       }
     }
