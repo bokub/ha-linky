@@ -3,7 +3,7 @@ import { MSG_TYPE_AUTH_INVALID, MSG_TYPE_AUTH_OK, MSG_TYPE_AUTH_REQUIRED } from 
 import { auth } from 'home-assistant-js-websocket/dist/messages.js';
 import { debug, warn } from './log.js';
 import dayjs from 'dayjs';
-import { StatisticDataPoint } from './format.js';
+import { StatisticDataPoint, StoredStatistic } from './format.js';
 
 const WS_URL = process.env.WS_URL || 'ws://supervisor/core/websocket';
 const TOKEN = process.env.SUPERVISOR_TOKEN;
@@ -130,47 +130,24 @@ export class HomeAssistantClient {
     return !ids.result.find((statistic: any) => statistic.statistic_id === statisticId);
   }
 
-  public async findLastStatistic(args: { prm: string; isProduction: boolean; isCost?: boolean }): Promise<null | {
-    start: number;
-    end: number;
-    state: number;
-    sum: number;
-    change: number;
-  }> {
-    const { prm, isProduction, isCost } = args;
-    const isNew = await this.isNewPRM({ prm, isProduction, isCost });
-    if (isNew) {
-      if (!isCost) {
-        warn(`PRM ${prm} not found in Home Assistant statistics`);
-      }
-      return null;
-    }
+  public async getHourlyStatistics(args: {
+    prm: string;
+    isProduction: boolean;
+    isCost?: boolean;
+    days: number;
+  }): Promise<StoredStatistic[]> {
+    const { days, ...id } = args;
+    const statisticId = getStatisticId(id);
 
-    const statisticId = getStatisticId({ prm, isProduction, isCost });
+    const data = await this.sendMessage({
+      type: 'recorder/statistics_during_period',
+      start_time: dayjs().subtract(days, 'days').startOf('day').toISOString(),
+      end_time: dayjs().toISOString(),
+      statistic_ids: [statisticId],
+      period: 'hour',
+    });
 
-    // Loop over the last 52 weeks
-    for (let i = 0; i < 52; i++) {
-      const data = await this.sendMessage({
-        type: 'recorder/statistics_during_period',
-        start_time: dayjs()
-          .subtract((i + 1) * 7, 'days')
-          .format('YYYY-MM-DDT00:00:00.00Z'),
-        end_time: dayjs()
-          .subtract(i * 7, 'days')
-          .format('YYYY-MM-DDT00:00:00.00Z'),
-        statistic_ids: [statisticId],
-        period: 'day',
-      });
-      const points = data.result[statisticId];
-      if (points && points.length > 0) {
-        const lastDay = dayjs(points[points.length - 1].start).format('DD/MM/YYYY');
-        debug('Last saved statistic date is ' + lastDay);
-        return points[points.length - 1];
-      }
-    }
-
-    debug(`No statistics found for PRM ${prm} in Home Assistant`);
-    return null;
+    return data.result[statisticId] ?? [];
   }
 
   public async purge(prm: string, isProduction: boolean) {

@@ -1,7 +1,7 @@
 import { Session } from 'linky';
 import dayjs, { Dayjs } from 'dayjs';
 import { debug, info, warn } from './log.js';
-import { formatDailyData, formatLoadCurve, type DataPoint } from './format.js';
+import { formatDailyData, formatLoadCurve, mergeByDay, type DataPoint } from './format.js';
 
 export class LinkyClient {
   private session: Session;
@@ -32,18 +32,38 @@ export class LinkyClient {
 
     let to = dayjs().subtract(offset, 'days').format('YYYY-MM-DD');
 
+    let recent: DataPoint[] = [];
+
     try {
       const loadCurve = this.isProduction
         ? await this.session.getProductionLoadCurve(from, to)
         : await this.session.getLoadCurve(from, to);
 
-      history.unshift(formatLoadCurve(loadCurve.interval_reading));
+      recent = formatLoadCurve(loadCurve.interval_reading);
       debug(`Successfully retrieved ${keyword} load curve from ${from} to ${to}`);
       offset += interval;
     } catch (e) {
       debug(`Cannot fetch ${keyword} load curve from ${from} to ${to}, here is the error:`);
       warn(e);
     }
+
+    // Enedis serves a day of load curve either complete or not at all, and some days are never
+    // served, while the daily API has them. Fetch both so those days are not lost forever.
+    try {
+      const dailyData = this.isProduction
+        ? await this.session.getDailyProduction(from, to)
+        : await this.session.getDailyConsumption(from, to);
+      const completed = mergeByDay(formatDailyData(dailyData.interval_reading), recent);
+      if (completed.length > recent.length) {
+        debug(`Completed ${keyword} load curve with daily data from ${from} to ${to}`);
+      }
+      recent = completed;
+    } catch (e) {
+      debug(`Cannot fetch daily ${keyword} data from ${from} to ${to}, here is the error:`);
+      warn(e);
+    }
+
+    history.unshift(recent);
 
     const maxLoops = 2;
     for (let loop = 0; loop < 2; loop++) {
