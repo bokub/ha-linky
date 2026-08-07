@@ -107,18 +107,14 @@ export class HomeAssistantClient {
     await this.sendMessage({
       type: 'recorder/import_statistics',
       metadata: {
-        // has_mean is deprecated in favor of mean_type, but kept for compatibility with older HA Core versions
+        // Deprecated since 11/2025 - Replaced with mean_type below
         has_mean: false,
-        // mean_type replaces has_mean since HA Core 2025.11 (0 = none, 1 = arithmetic, 2 = circular).
-        // Linky statistics are cumulative sums (energy / costs), so there is no averaging.
         mean_type: 0,
         has_sum: true,
         name: isCost ? `${name} (costs)` : name,
         source: statisticId.split(':')[0],
         statistic_id: statisticId,
         unit_of_measurement: isCost ? '€' : 'Wh',
-        // unit_class must be provided since HA Core 2025.11. 'energy' matches the Wh unit;
-        // monetary costs (€) have no Home Assistant unit conversion class, so null is used.
         unit_class: isCost ? null : 'energy',
       },
       stats,
