@@ -107,12 +107,15 @@ export class HomeAssistantClient {
     await this.sendMessage({
       type: 'recorder/import_statistics',
       metadata: {
+        // Deprecated since 11/2025 - Replaced with mean_type below
         has_mean: false,
+        mean_type: 0,
         has_sum: true,
         name: isCost ? `${name} (costs)` : name,
         source: statisticId.split(':')[0],
         statistic_id: statisticId,
         unit_of_measurement: isCost ? '€' : 'Wh',
+        unit_class: isCost ? null : 'energy',
       },
       stats,
     });

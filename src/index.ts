@@ -238,16 +238,27 @@ async function main() {
   haClient.disconnect();
 
   // Setup cron job
-  const randomMinute = Math.floor(Math.random() * 59);
-  const randomSecond = Math.floor(Math.random() * 59);
+  const randomMinutesOffset = Math.floor(Math.random() * 90);
+
+  const hourOffset = Math.floor(randomMinutesOffset / 60);
+  const syncHours = [6 + hourOffset, 9 + hourOffset];
+  const minute = randomMinutesOffset % 60;
+  const second = Math.floor(Math.random() * 60);
 
   info(
     `Data synchronization planned every day at ` +
-      `06:${randomMinute.toString().padStart(2, '0')}:${randomSecond.toString().padStart(2, '0')} and ` +
-      `09:${randomMinute.toString().padStart(2, '0')}:${randomSecond.toString().padStart(2, '0')}`,
+      syncHours
+        .map((hour) =>
+          [
+            hour.toString().padStart(2, '0'),
+            minute.toString().padStart(2, '0'),
+            second.toString().padStart(2, '0'),
+          ].join(':'),
+        )
+        .join(' and '),
   );
 
-  cron.schedule(`${randomSecond} ${randomMinute} 6,9 * * *`, async () => {
+  cron.schedule(`${second} ${minute} ${syncHours.join(',')} * * *`, async () => {
     await haClient.connect();
     for (const config of userConfig.meters) {
       if (config.action === 'sync') {

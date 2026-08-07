@@ -6,7 +6,7 @@
 - Open in VSCode with the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) installed
 - If not in a container already, click on "Reopen in container" when prompted
 - Click Terminal > Run Task > Start Home Assistant
-- Open [localhost:7123](http://localhost:7123)
+- Click the "Open in Browser" button when prompted (or open [localhost:7123](http://localhost:7123), if it works)
 - Install the add-on and configure it
 - Click the "rebuild" button in the add-on configuration to rebuild the add-on
 - Enjoy!

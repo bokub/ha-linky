@@ -105,8 +105,8 @@ Au premier lancement, **HA Linky** essaiera de récupérer jusqu'à **1 an** de 
 
 Ensuite, il synchronisera les données deux fois par jour tant qu'il n'est pas arrêté :
 
-- Une fois entre 6h et 7h du matin pour récupérer les données de la veille
-- Une fois entre 9h et 10h du matin au cas où la première synchronisation a échoué
+- Une fois entre 6h et 7h30 du matin pour récupérer les données de la veille
+- Une fois entre 9h et 10h30 du matin au cas où la première synchronisation a échoué
 
 Vous pourrez vérifier le bon fonctionnement de l'app en vous rendant dans l'onglet _Journal_ / _Log_, où toutes les informations utiles seront affichées.
 
