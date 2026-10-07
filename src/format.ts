@@ -1,15 +1,62 @@
 import dayjs from 'dayjs';
 
-export type LinkyRawPoint = { value: string; date: string; interval_length?: string }; // Result from Linky API
+export type LinkyRawPoint = { v: string | null; d: string; p?: string; n?: string; iv?: string; ec?: string };
+export type LinkyApiResponse = { grandeur?: Array<{ points?: LinkyRawPoint[] }> };
 export type HistoryRawPoint = { debut: string; kW: string }; // Result from history CSV file
 
 export type DataPoint = { date: string; value: number }; // Standardized data point. Date is in ISO 8601 format and represents the start of the interval. Value can be W, Wh or EUR.
 export type StatisticDataPoint = { start: string; state: number; sum: number }; // Data point formatted for Home Assistant statistics
 
+export function extractLinkyPoints(data: LinkyApiResponse | LinkyRawPoint[] | undefined): LinkyRawPoint[] {
+  if (!data) {
+    return [];
+  }
+
+  if (Array.isArray(data)) {
+    return data;
+  }
+
+  if (Array.isArray(data.grandeur)) {
+    return data.grandeur.flatMap((g) => (Array.isArray(g.points) ? g.points : []));
+  }
+
+  return [];
+}
+
+export function getPointValue(point: LinkyRawPoint): string {
+  return point.v ?? '0';
+}
+
+export function getPointDate(point: LinkyRawPoint): string {
+  return point.d;
+}
+
+export function getPointInterval(point: LinkyRawPoint): string | undefined {
+  return point.p;
+}
+
+export function parseIntervalLength(interval: string | undefined): number {
+  if (!interval) {
+    return 1;
+  }
+
+  const normalized = interval.toUpperCase();
+
+  if (normalized.includes('H') || normalized.includes('M') || normalized.includes('D')) {
+    const hours = Number(normalized.match(/(\d+)H/)?.[1] ?? '0');
+    const minutes = Number(normalized.match(/(\d+)M/)?.[1] ?? '0');
+    const days = Number(normalized.match(/(\d+)D/)?.[1] ?? '0');
+    return days * 24 * 60 + hours * 60 + minutes;
+  }
+
+  const match = normalized.match(/(\d+)/);
+  return match ? Number(match[1]) : 1;
+}
+
 export function formatDailyData(data: LinkyRawPoint[]): DataPoint[] {
   return data.map((r) => ({
-    value: +r.value,
-    date: dayjs(r.date).format('YYYY-MM-DDTHH:mm:ssZ'),
+    value: Number(getPointValue(r)),
+    date: dayjs(getPointDate(r)).format('YYYY-MM-DDTHH:mm:ssZ'),
   }));
 }
 
@@ -22,9 +69,9 @@ export function formatHistoryFile(data: HistoryRawPoint[]): DataPoint[] {
 
 export function formatLoadCurve(data: LinkyRawPoint[]): DataPoint[] {
   return data.map((r) => ({
-    value: Number(r.value),
-    date: dayjs(r.date)
-      .subtract(parseFloat(r.interval_length?.match(/\d+/)[0] || '1'), 'minute')
+    value: Number(getPointValue(r)),
+    date: dayjs(getPointDate(r))
+      .subtract(parseIntervalLength(getPointInterval(r)), 'minute')
       .format('YYYY-MM-DDTHH:mm:ssZ'),
   }));
 }

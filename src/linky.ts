@@ -1,7 +1,7 @@
 import { Session } from 'linky';
 import dayjs, { Dayjs } from 'dayjs';
 import { debug, info, warn } from './log.js';
-import { formatDailyData, formatLoadCurve, type DataPoint } from './format.js';
+import { extractLinkyPoints, formatDailyData, formatLoadCurve, type DataPoint } from './format.js';
 
 export class LinkyClient {
   private session: Session;
@@ -11,7 +11,7 @@ export class LinkyClient {
     this.prm = prm;
     this.isProduction = isProduction;
     this.session = new Session(token, prm);
-    this.session.userAgent = 'ha-linky/1.8.0';
+    this.session.userAgent = 'ha-linky/1.9.0';
   }
 
   public async getEnergyData(firstDay: null | Dayjs): Promise<DataPoint[]> {
@@ -37,7 +37,7 @@ export class LinkyClient {
         ? await this.session.getProductionLoadCurve(from, to)
         : await this.session.getLoadCurve(from, to);
 
-      history.unshift(formatLoadCurve(loadCurve.interval_reading));
+      history.unshift(formatLoadCurve(extractLinkyPoints(loadCurve)));
       debug(`Successfully retrieved ${keyword} load curve from ${from} to ${to}`);
       offset += interval;
     } catch (e) {
@@ -64,17 +64,18 @@ export class LinkyClient {
         const dailyData = this.isProduction
           ? await this.session.getDailyProduction(from, to)
           : await this.session.getDailyConsumption(from, to);
-        history.unshift(formatDailyData(dailyData.interval_reading));
+        history.unshift(formatDailyData(extractLinkyPoints(dailyData)));
         debug(`Successfully retrieved daily ${keyword} data from ${from} to ${to}`);
         offset += interval;
-      } catch (e) {
+      } catch (e: any) {
+        const errorDescription = getErrorDescription(e);
         if (
           !firstDay &&
           [
             "The requested period cannot be anterior to the meter's last activation date",
             'The start date must be greater than the history deadline.',
             'no measure found for this usage point',
-          ].includes(e.response?.error?.['error_description'])
+          ].includes(errorDescription)
         ) {
           // Not really an error, just a limit reached
           info(`All available ${keyword} data has been imported`);
@@ -102,4 +103,25 @@ export class LinkyClient {
 
 function isBefore(a: Dayjs, b: Dayjs): boolean {
   return b && (a.isBefore(b, 'day') || a.isSame(b, 'day'));
+}
+
+function getErrorDescription(error: any): string {
+  const payload = error?.response?.data ?? error?.response?.error ?? error?.response ?? error;
+
+  if (typeof payload === 'string') {
+    return payload;
+  }
+
+  if (payload && typeof payload === 'object') {
+    return (
+      payload.error_description ??
+      payload.error?.error_description ??
+      payload.message ??
+      payload.detail ??
+      payload.error ??
+      ''
+    );
+  }
+
+  return '';
 }
