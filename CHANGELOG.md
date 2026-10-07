@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9.0 - 7 octobre 2026
+
+- Utilisation de la dernière version de [@bokub/linky](https://github.com/bokub/linky/tree/master) pour utiliser la nouvelle API "_Mesure synchrone v2_" d'Enedis. Plus d'informations sur [Conso API](https://conso.boris.sh/migration-2026/)
+
 ## 1.8.0 - 7 août 2026
 
 - Modification des horaires de synchronisation: une fois entre 6h et 7h30 puis un deuxième essai si nécessaire entre 9h et 10h30 (au lieu de 6h-7h et 9h-10h), afin d'éviter les problèmes de rate-limit

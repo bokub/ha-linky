@@ -35,14 +35,18 @@ describe('LinkyClient', () => {
 
   it('Fetches 1 year of historical data if first parameter is null', async () => {
     getLoadCurve.mockReturnValue({
-      interval_reading: [
-        { value: '100', date: '2023-12-31 00:30:00', interval_length: 'PT30M' },
-        { value: '300', date: '2023-12-31 01:00:00', interval_length: 'PT30M' },
-        { value: '500', date: '2023-12-31 01:30:00', interval_length: 'PT30M' },
+      grandeur: [
+        {
+          points: [
+            { v: '100', d: '2023-12-31 00:30:00', p: 'PT30M' },
+            { v: '300', d: '2023-12-31 01:00:00', p: 'PT30M' },
+            { v: '500', d: '2023-12-31 01:30:00', p: 'PT30M' },
+          ],
+        },
       ],
     });
 
-    getDailyConsumption.mockImplementation((start: string) => ({ interval_reading: [{ value: '2000', date: start }] }));
+    getDailyConsumption.mockImplementation((start: string) => ({ grandeur: [{ points: [{ v: '2000', d: start }] }] }));
 
     const result = await client.getEnergyData(null);
 
@@ -71,9 +75,9 @@ describe('LinkyClient', () => {
 
   it('Fetches hourly and daily data when the last statistic is old', async () => {
     getLoadCurve.mockReturnValue({
-      interval_reading: [{ value: '100', date: '2023-12-25 00:30:00', interval_length: 'PT30M' }],
+      grandeur: [{ points: [{ v: '100', d: '2023-12-25 00:30:00', p: 'PT30M' }] }],
     });
-    getDailyConsumption.mockReturnValue({ interval_reading: [{ value: '2000', date: '2023-07-28' }] });
+    getDailyConsumption.mockReturnValue({ grandeur: [{ points: [{ v: '2000', d: '2023-07-28' }] }] });
 
     const result = await client.getEnergyData(dayjs('2023-07-28'));
 
@@ -94,7 +98,7 @@ describe('LinkyClient', () => {
 
   it('Fetches only missing hourly data when the last statistic is recent', async () => {
     getLoadCurve.mockReturnValue({
-      interval_reading: [{ value: '100', date: '2023-12-25 00:30:00', interval_length: 'PT30M' }],
+      grandeur: [{ points: [{ v: '100', d: '2023-12-25 00:30:00', p: 'PT30M' }] }],
     });
 
     const result = await client.getEnergyData(dayjs('2023-12-25'));
