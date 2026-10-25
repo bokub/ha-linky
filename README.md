@@ -345,3 +345,36 @@ services:
 ```
 
 Pour importer des fichiers CSV (optionnel), rajoutez simplement un deuxième volume `<csv-folder>:/config` où `<csv-folder>` correspond au **dossier** contenant vos fichiers CSV.
+
+### Gestion automatisée via un service systemd
+
+Vous pouvez également utiliser le modèle de service systemd ci-dessous pour maintenir automatiquement ha-linky à jour et le lancer au démarrage du système.
+Pour cela, créer un fichier `/usr/lib/systemd/system/ha-linky.service` ou `/etc/systemd/system/ha-linky.service` (à votre convenance) à partir du template ci-dessous : 
+
+```sh
+[Unit]
+Description=Linky connector for home assistant docker
+After=docker.service network-online.target hass-docker.service #Remplacer hass-docker.service par le nom du service gérant votre installation hass
+Requires=docker.service hass-docker.service # Remplacer hass-docker.service ici aussi
+Wants=network-online.target
+
+[Service]
+ExecStartPre=-/usr/bin/docker stop ha-linky # Stopper un éventuel conteneur déjà lancé avant de commencer...
+ExecStartPre=-/usr/bin/docker rm ha-linky # Supprimer le conteneur pour pouvoir le reconstruire avec une version à jour
+ExecStartPre=/usr/bin/docker build https://github.com/bokub/ha-linky.git -f standalone.Dockerfile -t ha-linky # Reconstruire le conteneur à jour
+ExecStart=/usr/bin/docker run \
+    -e SUPERVISOR_TOKEN='<jeton>' \
+    -e WS_URL='ws://<ha-ip>/api/websocket' \
+    -e TZ='<timezone>' \
+    -v <options-folder>:/data \
+    --network=host \
+    --restart=unless-stopped \
+    ha-linky
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Puis rechargez la configuration systemd : `sudo systemctl daemon-reload`
+Testez le bon fonctionnement du service : `sudo systemctl start ha-linky`
+Et enfin, activez le lancement automatique au démarrage du système : `sudo systemctl enable ha-linky`
