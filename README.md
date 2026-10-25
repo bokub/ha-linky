@@ -161,14 +161,15 @@ La configuration des tarifs est optionnelle, et s'écrit dans l'encadré `costs`
 
 Chaque item de la liste correspond à un tarif spécifique, qui peut être défini selon plusieurs critères (heure, jour de la semaine, date, PRM, production/consommation).
 
-Pour chaque tarif, vous devez définir soit un **prix fixe** en €/kWh (`price`), soit une **entité** Home Assistant (`entity_id`) qui fournira un prix variable dans le temps.
+Pour chaque tarif, vous devez définir soit un **prix fixe** en €/kWh (`price`), soit une **entité** Home Assistant (`entity_id`) qui fournira un prix variable dans le temps, soit un **coût fixe par jour** en € (`daily_fee`), par exemple le prix de votre abonnement.
 
-Les paramètres possibles pour chaque tarif sont expliqués dans le tableau ci-dessous. Ils sont tous optionnels, sauf `price` et `entity_id` dont **exactement un** doit être renseigné :
+Les paramètres possibles pour chaque tarif sont expliqués dans le tableau ci-dessous. Ils sont tous optionnels, sauf `price`, `entity_id` et `daily_fee` dont **exactement un** doit être renseigné :
 
 | Paramètre    | Description                                                                                                                | Compatible avec `entity_id` |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
 | `price`      | Coût du kWh en € (tarification statique)                                                                                   |                             |
 | `entity_id`  | Identifiant d'une entité Home Assistant pour une tarification dynamique (ex. `sensor.electricity_price`)                   |                             |
+| `daily_fee`  | Coût fixe en € ajouté une fois par jour, sur la première heure de la journée (ex. abonnement)                              |                             |
 | `prm`        | Numéro de PRM. Si non renseigné, tous les PRMs en consommation/production (selon le paramètre d'en dessous) sont concernés | ✓                           |
 | `production` | Si égal à `true`, le tarif sera appliqué à de la production, il s'agira donc techniquement d'un gain plutôt qu'un coût     | ✓                           |
 | `after`      | Heure à partir de laquelle ce tarif est valable, au format _"HH:00"_                                                       | ✗                           |
@@ -177,7 +178,7 @@ Les paramètres possibles pour chaque tarif sont expliqués dans le tableau ci-d
 | `start_date` | Date à partir de laquelle ce tarif est valable, au format _"YYYY-MM-DD"_                                                   | ✓                           |
 | `end_date`   | Date à partir de laquelle ce tarif n'est plus valable, au format _"YYYY-MM-DD"_                                            | ✓                           |
 
-**N.B** : Les filtres horaires (`after`, `before`, `weekday`) ne peuvent **pas** être utilisés avec `entity_id`, car les entités de tarification dynamique contiennent déjà les variations de prix dans le temps. Seuls les filtres de dates (`start_date`, `end_date`) sont compatibles avec `entity_id`.
+**N.B** : Les filtres horaires (`after`, `before`, `weekday`) ne peuvent **pas** être utilisés avec `entity_id`, car les entités de tarification dynamique contiennent déjà les variations de prix dans le temps. Seuls les filtres de dates (`start_date`, `end_date`) sont compatibles avec `entity_id`. Il en va de même pour `daily_fee`, qui ne dépend pas de l'heure.
 
 #### Exemples
 
@@ -233,6 +234,13 @@ Tarif qui évolue au cours du temps : `0,21 €/kWh` jusqu'au 30 juin inclus, `0
   end_date: '2024-09-01'
 - price: 0.23
   start_date: '2024-09-01'
+```
+
+Prise en compte de l'abonnement : `0,23 €/kWh`, plus `15,86 €` d'abonnement par mois, soit `15,86 × 12 / 365 = 0,5214 €` par jour
+
+```yaml
+- price: 0.23
+- daily_fee: 0.5214
 ```
 
 Configuration avec une entité contenant un prix variable dans le temps :

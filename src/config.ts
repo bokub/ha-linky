@@ -12,6 +12,7 @@ export type MeterConfig = {
 export type CostConfig = {
   price?: number;
   entity_id?: string;
+  daily_fee?: number; // Fixed cost in € per day (e.g. subscription), not compatible with time-based filters
   after?: string;
   before?: string;
   weekday?: Array<'mon' | 'tue' | 'wed' | 'thu' | 'fri' | 'sat' | 'sun'>;
@@ -51,6 +52,24 @@ export function getUserConfig(): UserConfig {
             for (const cost of prmCostConfigs) {
               const hasPrice = cost.price && typeof cost.price === 'number';
               const hasEntityId = cost.entity_id && typeof cost.entity_id === 'string';
+              const hasDailyFee = cost.daily_fee && typeof cost.daily_fee === 'number';
+
+              if (hasDailyFee) {
+                if (hasPrice || hasEntityId || cost.after || cost.before || cost.weekday) {
+                  throw new Error(
+                    `Cost configuration error for PRM ${meter.prm}: 'daily_fee' cannot be combined with 'price', 'entity_id' or time-based filters ('after', 'before', 'weekday').`,
+                  );
+                }
+                const resultFee: CostConfig = { daily_fee: cost.daily_fee };
+                if (cost.start_date && typeof cost.start_date === 'string') {
+                  resultFee.start_date = cost.start_date;
+                }
+                if (cost.end_date && typeof cost.end_date === 'string') {
+                  resultFee.end_date = cost.end_date;
+                }
+                resultMeter.costs.push(resultFee);
+                continue;
+              }
 
               if (hasPrice && hasEntityId) {
                 throw new Error(

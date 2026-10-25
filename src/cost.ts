@@ -1,6 +1,6 @@
 import { type DataPoint } from './format.js';
 import { CostConfig } from './config.js';
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import { info } from './log.js';
 
 export type EntityHistoryData = {
@@ -119,17 +119,8 @@ function findMatchingCostConfig(point: DataPoint, configs: CostConfig[]): CostCo
       return false;
     }
     const pointStart = dayjs(point.date);
-    if (config.start_date) {
-      const configStartDate = dayjs(config.start_date);
-      if (pointStart.isBefore(configStartDate)) {
-        return false;
-      }
-    }
-    if (config.end_date) {
-      const configEndDate = dayjs(config.end_date);
-      if (pointStart.isAfter(configEndDate) || pointStart.isSame(configEndDate)) {
-        return false;
-      }
+    if (!isInDateRange(pointStart, config)) {
+      return false;
     }
 
     if (config.weekday && config.weekday.length > 0) {
@@ -165,4 +156,40 @@ function findMatchingCostConfig(point: DataPoint, configs: CostConfig[]): CostCo
 
     return true;
   });
+}
+
+function isInDateRange(date: Dayjs, config: CostConfig): boolean {
+  if (config.start_date && date.isBefore(dayjs(config.start_date))) {
+    return false;
+  }
+  if (config.end_date && !date.isBefore(dayjs(config.end_date))) {
+    return false;
+  }
+  return true;
+}
+
+// Add fixed daily costs (e.g. subscription) to hourly costs, once per day, in the first hour of the day.
+// Must run after groupDataPointsByHour, which averages the values of an hour.
+export function addDailyFees(hourlyCosts: DataPoint[], costConfigs: CostConfig[]): DataPoint[] {
+  const feeConfigs = costConfigs.filter((config) => config.daily_fee);
+  if (feeConfigs.length === 0) {
+    return hourlyCosts;
+  }
+
+  const result = hourlyCosts.map((point) => ({ ...point }));
+  const days = new Set(result.map((point) => dayjs(point.date).startOf('day').format('YYYY-MM-DDTHH:mm:ssZ')));
+  for (const day of days) {
+    const feeConfig = feeConfigs.find((config) => isInDateRange(dayjs(day), config));
+    if (!feeConfig) {
+      continue;
+    }
+    const firstHour = result.find((point) => dayjs(point.date).isSame(day));
+    if (firstHour) {
+      firstHour.value = Math.round(10000 * (firstHour.value + feeConfig.daily_fee)) / 10000;
+    } else {
+      result.push({ date: day, value: feeConfig.daily_fee });
+    }
+  }
+
+  return result.sort((a, b) => dayjs(a.date).valueOf() - dayjs(b.date).valueOf());
 }

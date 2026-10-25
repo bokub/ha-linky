@@ -35,6 +35,7 @@ schema:
   costs:
     - price: float?
       entity_id: str?
+      daily_fee: float?
       prm: str?
       production: bool?
       after: str?

@@ -3,7 +3,7 @@ import { LinkyClient } from './linky.js';
 import { getUserConfig, MeterConfig } from './config.js';
 import { getMeterHistory } from './history.js';
 import { formatAsStatistics, groupDataPointsByHour, incrementSums, DataPoint } from './format.js';
-import { computeCosts, EntityHistoryData } from './cost.js';
+import { addDailyFees, computeCosts, EntityHistoryData } from './cost.js';
 import { debug, error, info, warn } from './log.js';
 import cron from 'node-cron';
 import dayjs from 'dayjs';
@@ -69,7 +69,7 @@ async function main() {
     if (config.costs) {
       const entityHistory = await fetchEntityHistory(haClient, config.costs, energyData);
       const costs = computeCosts(energyData, config.costs, entityHistory);
-      const costsStatistics = formatAsStatistics(groupDataPointsByHour(costs));
+      const costsStatistics = formatAsStatistics(addDailyFees(groupDataPointsByHour(costs), config.costs));
 
       if (costsStatistics.length > 0) {
         await haClient.saveStatistics({
@@ -120,7 +120,7 @@ async function main() {
     if (config.costs) {
       const entityHistory = await fetchEntityHistory(haClient, config.costs, energyData);
       const costs = computeCosts(energyData, config.costs, entityHistory);
-      const costsStatistics = formatAsStatistics(groupDataPointsByHour(costs));
+      const costsStatistics = formatAsStatistics(addDailyFees(groupDataPointsByHour(costs), config.costs));
 
       if (costsStatistics.length > 0) {
         const lastCostStatistic = await haClient.findLastStatistic({

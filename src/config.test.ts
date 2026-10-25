@@ -176,4 +176,38 @@ describe('getUserConfig', () => {
       ],
     });
   });
+
+  it('Accepts daily_fee with start_date and end_date', () => {
+    vi.mocked(readFileSync).mockReturnValue(`{
+      "meters": [
+        { "prm": "123", "token": "ccc", "name": "Conso", "action": "sync" }
+      ],
+      "costs": [
+        { "price": 0.2 },
+        { "daily_fee": 0.52, "start_date": "2024-01-01", "end_date": "2024-12-31" }
+      ]
+    }`);
+
+    expect(getUserConfig().meters[0].costs).toEqual([
+      { price: 0.2 },
+      { daily_fee: 0.52, start_date: '2024-01-01', end_date: '2024-12-31' },
+    ]);
+  });
+
+  it('Throws if daily_fee is combined with price or time-based filters', () => {
+    for (const extra of ['"price": 0.2', '"after": "08:00"']) {
+      vi.mocked(readFileSync).mockReturnValue(`{
+        "meters": [
+          { "prm": "123", "token": "ccc", "name": "Conso", "action": "sync" }
+        ],
+        "costs": [
+          { "daily_fee": 0.52, ${extra} }
+        ]
+      }`);
+
+      expect(() => getUserConfig()).toThrowError(
+        "Cost configuration error for PRM 123: 'daily_fee' cannot be combined with 'price', 'entity_id' or time-based filters ('after', 'before', 'weekday').",
+      );
+    }
+  });
 });

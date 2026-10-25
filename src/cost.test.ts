@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeCosts, EntityHistoryData } from './cost.js';
+import { addDailyFees, computeCosts, EntityHistoryData } from './cost.js';
 import { formatAsStatistics, groupDataPointsByHour } from './format';
 
 describe('Cost computer', () => {
@@ -298,5 +298,36 @@ describe('Cost computer', () => {
     expect(result).toEqual([
       { date: '2024-01-01T06:00:00+01:00', value: 0.25 }, // Assume €/kWh
     ]);
+  });
+
+  it('Should add a daily fee once per day, in the first hour of the day', () => {
+    const costConfigs = [
+      { price: 0.1 },
+      { daily_fee: 0.5, end_date: '2024-01-17' },
+      { daily_fee: 0.6, start_date: '2024-01-17' },
+    ];
+    const costs = computeCosts(
+      [
+        { date: '2024-01-15T00:00:00+01:00', value: 1000 },
+        { date: '2024-01-15T00:30:00+01:00', value: 3000 },
+        { date: '2024-01-15T01:00:00+01:00', value: 1000 },
+        { date: '2024-01-16T00:00:00+01:00', value: 2000 },
+        { date: '2024-01-17T05:00:00+01:00', value: 3000 },
+      ],
+      costConfigs,
+    );
+
+    expect(addDailyFees(groupDataPointsByHour(costs), costConfigs)).toEqual([
+      { date: '2024-01-15T00:00:00+01:00', value: 0.2 + 0.5 },
+      { date: '2024-01-15T01:00:00+01:00', value: 0.1 },
+      { date: '2024-01-16T00:00:00+01:00', value: 0.2 + 0.5 },
+      { date: '2024-01-17T00:00:00+01:00', value: 0.6 },
+      { date: '2024-01-17T05:00:00+01:00', value: 0.3 },
+    ]);
+  });
+
+  it('Should not change costs without daily fee', () => {
+    const hourlyCosts = [{ date: '2024-01-15T00:00:00+01:00', value: 0.1 }];
+    expect(addDailyFees(hourlyCosts, [{ price: 0.1 }])).toBe(hourlyCosts);
   });
 });
