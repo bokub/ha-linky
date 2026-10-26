@@ -81,7 +81,9 @@ export function formatLoadCurve(data: LinkyRawPoint[]): DataPoint[] {
 export function groupDataPointsByHour(data: DataPoint[]): DataPoint[] {
   const grouped = data.reduce(
     (acc, cur) => {
-      const date = dayjs(cur.date).startOf('hour').format('YYYY-MM-DDTHH:mm:ssZ');
+      // Arrondir l'instant UTC pour distinguer les deux occurrences de l'heure d'hiver.
+      const hourStart = Math.floor(dayjs(cur.date).valueOf() / 3_600_000) * 3_600_000;
+      const date = dayjs(hourStart).format('YYYY-MM-DDTHH:mm:ssZ');
       if (!acc[date]) {
         acc[date] = [];
       }
