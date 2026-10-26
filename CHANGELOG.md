@@ -1,5 +1,9 @@
 # Changelog
 
+## Non publié
+
+- Correction du regroupement des courbes de charge lors du passage à l'heure d'hiver : les deux occurrences de l'heure répétée sont conservées séparément, pour ne plus sous-estimer les statistiques d'énergie et de coûts. Les données déjà importées ne sont pas corrigées automatiquement.
+
 ## 1.9.0 - 7 octobre 2026
 
 - Utilisation de la dernière version de [@bokub/linky](https://github.com/bokub/linky/tree/master) pour utiliser la nouvelle API "_Mesure synchrone v2_" d'Enedis. Plus d'informations sur [Conso API](https://conso.boris.sh/migration-2026/)

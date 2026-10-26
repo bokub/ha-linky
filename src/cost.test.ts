@@ -3,6 +3,23 @@ import { computeCosts, EntityHistoryData } from './cost.js';
 import { formatAsStatistics, groupDataPointsByHour } from './format';
 
 describe('Cost computer', () => {
+  it('Should preserve costs for both occurrences of the repeated autumn hour', () => {
+    const costs = computeCosts(
+      [
+        { date: '2026-10-25T02:00:00+02:00', value: 1000 },
+        { date: '2026-10-25T02:30:00+02:00', value: 1000 },
+        { date: '2026-10-25T02:00:00+01:00', value: 1000 },
+        { date: '2026-10-25T02:30:00+01:00', value: 1000 },
+      ],
+      [{ price: 0.2 }],
+    );
+
+    expect(formatAsStatistics(groupDataPointsByHour(costs))).toEqual([
+      { start: '2026-10-25T02:00:00+02:00', state: 0.2, sum: 0.2 },
+      { start: '2026-10-25T02:00:00+01:00', state: 0.2, sum: 0.4 },
+    ]);
+  });
+
   it('Should take start and end dates in account', () => {
     const result = computeCosts(
       [

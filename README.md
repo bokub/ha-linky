@@ -125,6 +125,7 @@ Pour visualiser les données de **HA Linky** dans vos tableaux de bord d'énergi
 - Les données d'une journée ne sont pas accessibles en temps réel, il faut attendre **le lendemain de leur mesure** pour pouvoir les récupérer, entre 6h et 10h.
 - Pour les dates récentes (moins de 7 jours), **HA Linky** essaiera de récupérer en priorité des données par demi-heure
 - Pour les dates plus anciennes, **HA Linky** récupèrera seulement des données quotidiennes. Vous verrez alors une seule grande barre entre 0h et 1h du matin sur votre tableau de bord d'énergie si vous affichez le graphique détaillé d'une telle journée.
+- Pour les courbes de charge, le regroupement horaire distingue les deux occurrences d'une même heure lors du passage à l'heure d'hiver : une journée complète comporte alors 25 heures (23 lors du passage à l'heure d'été). Ce traitement ne répare pas automatiquement les statistiques déjà importées par une ancienne version.
 
 ### Remise à zéro
 
